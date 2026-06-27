@@ -1,0 +1,3153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz · Segundo Parcial · Estadística II</title>
+<style>
+  :root{
+    --vio-900:#3b1d6e; --vio-700:#5a2ea6; --vio-600:#6d3bc4; --vio-500:#7c4dd6;
+    --vio-100:#efe7fb; --vio-50:#f7f3fe;
+    --ink:#241a35; --muted:#6b6280; --line:#e3dbf2;
+    --ok:#16835a; --ok-bg:#e4f6ee; --ok-line:#9fe0c4;
+    --bad:#c2334d; --bad-bg:#fde8ec; --bad-line:#f4b6c2;
+    --amber:#9a6a00; --amber-bg:#fff7df; --amber-line:#f0d98a;
+    --paper:#ffffff; --bg:#ece7f5;
+    --shadow:0 10px 30px -12px rgba(59,29,110,.35);
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 500px at 100% -10%, #d9ccf3 0%, transparent 55%),
+      radial-gradient(1000px 460px at -10% 0%, #e7defb 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:28px 18px 80px}
+
+  /* Header */
+  header.hd{
+    background:linear-gradient(135deg,var(--vio-700),var(--vio-500));
+    color:#fff; border-radius:var(--r); padding:24px 26px; box-shadow:var(--shadow);
+    position:relative; overflow:hidden;
+  }
+  header.hd::after{
+    content:""; position:absolute; right:-60px; top:-60px; width:220px; height:220px;
+    background:radial-gradient(circle,rgba(255,255,255,.18),transparent 60%); border-radius:50%;
+  }
+  .hd .eyebrow{font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; opacity:.85; font-weight:600}
+  .hd h1{margin:.25rem 0 .15rem; font-size:1.55rem; font-weight:800; letter-spacing:-.01em}
+  .hd .sub{opacity:.92; font-size:.92rem}
+  .hd .meta{margin-top:14px; display:flex; gap:8px; flex-wrap:wrap; font-size:.78rem}
+  .pill{background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28); padding:5px 11px; border-radius:999px; backdrop-filter:blur(4px)}
+
+  /* Setup card */
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:22px; margin-top:18px}
+  .card h2{margin:0 0 4px; font-size:1.05rem; color:var(--vio-700)}
+  .card p.hint{margin:0 0 16px; color:var(--muted); font-size:.88rem}
+
+  .seg-label{font-size:.74rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:700; margin:14px 0 8px}
+  .seg{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+  .seg button, .opt-btn{
+    font:inherit; cursor:pointer; border:1.5px solid var(--line); background:var(--vio-50);
+    color:var(--ink); padding:12px 10px; border-radius:12px; transition:.15s; text-align:left;
+  }
+  .seg button{text-align:center; font-weight:600}
+  .seg button .n{display:block; font-size:.72rem; color:var(--muted); font-weight:500; margin-top:2px}
+  .seg button.active{background:var(--vio-700); color:#fff; border-color:var(--vio-700)}
+  .seg button.active .n{color:rgba(255,255,255,.8)}
+  .seg button:hover:not(.active){border-color:var(--vio-500)}
+
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px}
+  @media(max-width:540px){.row2{grid-template-columns:1fr}}
+  .toggle{display:flex; align-items:center; gap:10px; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px; background:var(--vio-50); cursor:pointer; user-select:none}
+  .toggle input{appearance:none; width:38px; height:22px; background:#cdbfe9; border-radius:999px; position:relative; cursor:pointer; transition:.2s; flex:none}
+  .toggle input:checked{background:var(--vio-600)}
+  .toggle input::after{content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.2s}
+  .toggle input:checked::after{transform:translateX(16px)}
+  .toggle span{font-size:.88rem}
+
+  .start{
+    margin-top:18px; width:100%; border:none; cursor:pointer; font:inherit; font-weight:700;
+    background:linear-gradient(135deg,var(--vio-700),var(--vio-500)); color:#fff;
+    padding:15px; border-radius:12px; font-size:1rem; box-shadow:0 8px 20px -8px rgba(108,59,196,.7); transition:.15s;
+  }
+  .start:hover{transform:translateY(-1px)}
+  .start:disabled{opacity:.45; cursor:not-allowed; transform:none}
+
+  /* Quiz screen */
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap}
+  .progresswrap{flex:1; min-width:180px}
+  .progresswrap .lbls{display:flex; justify-content:space-between; font-size:.76rem; color:var(--muted); margin-bottom:6px; font-weight:600}
+  .bar{height:9px; background:var(--vio-100); border-radius:999px; overflow:hidden}
+  .bar > i{display:block; height:100%; background:linear-gradient(90deg,var(--vio-600),var(--vio-500)); width:0; transition:width .35s ease; border-radius:999px}
+  .scorebox{display:flex; gap:6px; font-size:.78rem; font-weight:700}
+  .chip{padding:5px 10px; border-radius:999px}
+  .chip.ok{background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok-line)}
+  .chip.bad{background:var(--bad-bg); color:var(--bad); border:1px solid var(--bad-line)}
+
+  .qcard{background:var(--paper); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); overflow:hidden}
+  .qhead{display:flex; align-items:center; gap:10px; padding:16px 20px 0}
+  .qtag{font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:4px 10px; border-radius:999px}
+  .qtag.teoria{background:#eafbf3; color:var(--ok); border:1px solid var(--ok-line)}
+  .qtag.practica{background:#eef2ff; color:#3a48b5; border:1px solid #c3ccf6}
+  .qnum{font-size:.74rem; color:var(--muted); font-weight:600; margin-left:auto}
+  .qmulti{font-size:.68rem; font-weight:700; color:var(--amber); background:var(--amber-bg); border:1px solid var(--amber-line); padding:4px 10px; border-radius:999px}
+
+  .qbody{padding:14px 20px 4px}
+  .qtext{font-size:1.06rem; font-weight:600; margin:0 0 6px; color:var(--ink)}
+
+  /* embedded tables */
+  .qt-wrap{margin:12px 0 4px}
+  .qt-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+  table.qt{border-collapse:collapse; width:100%; font-size:.82rem; margin:2px 0; min-width:300px}
+  table.qt th{background:var(--vio-700); color:#fff; font-weight:600; padding:7px 9px; text-align:left; border:1px solid var(--vio-700)}
+  table.qt td{padding:6px 9px; border:1px solid var(--line); background:#fff}
+  table.qt tbody tr:nth-child(even) td{background:var(--vio-50)}
+  .qt-cap{font-size:.76rem; color:var(--muted); margin:6px 0 0; font-style:italic}
+  .qt-figs{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:4px 0}
+  .qt-fig{border:1px solid var(--line); border-radius:10px; padding:8px; background:#fff; text-align:center}
+  .qt-fig-lbl{font-size:.72rem; font-weight:700; color:var(--vio-700); display:block; margin-bottom:4px}
+  .qt-fig svg{width:100%; height:auto}
+  .qt-fig svg circle{fill:var(--vio-600)}
+  .qt-fig svg line.ax{stroke:#b9add6; stroke-width:1.4}
+
+  .opts{display:flex; flex-direction:column; gap:9px; padding:8px 20px 18px}
+  .opt-btn{position:relative; padding:13px 14px 13px 46px; line-height:1.4; font-size:.94rem}
+  .opt-btn .mk{position:absolute; left:12px; top:50%; transform:translateY(-50%); width:22px; height:22px; border-radius:6px; border:2px solid #c4b6e6; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:800; color:#fff; background:transparent; transition:.15s}
+  .opt-btn.multi .mk{border-radius:6px}
+  .opt-btn:not(.multi) .mk{border-radius:50%}
+  .opt-btn:hover:not(.locked){border-color:var(--vio-500); background:#fff}
+  .opt-btn.sel{border-color:var(--vio-600); background:var(--vio-50)}
+  .opt-btn.sel .mk{background:var(--vio-600); border-color:var(--vio-600)}
+  .opt-btn.locked{cursor:default}
+  .opt-btn.correct{border-color:var(--ok-line); background:var(--ok-bg)}
+  .opt-btn.correct .mk{background:var(--ok); border-color:var(--ok)}
+  .opt-btn.wrong{border-color:var(--bad-line); background:var(--bad-bg)}
+  .opt-btn.wrong .mk{background:var(--bad); border-color:var(--bad)}
+  .opt-btn.missed{border-color:var(--ok-line); background:#f1fbf6; border-style:dashed}
+
+  .feedback{margin:0 20px 16px; padding:12px 14px; border-radius:12px; font-size:.88rem; display:none}
+  .feedback.show{display:block}
+  .feedback.good{background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok-line)}
+  .feedback.bad{background:var(--bad-bg); color:var(--bad); border:1px solid var(--bad-line)}
+  .feedback strong{display:block; margin-bottom:2px; font-size:.92rem}
+  .feedback .note{display:block; margin-top:8px; color:var(--amber); background:var(--amber-bg); border:1px solid var(--amber-line); padding:8px 10px; border-radius:8px; font-size:.82rem}
+  .feedback .just{display:block; margin-top:8px; color:var(--vio-900); background:#f3eefc; border:1px solid #d9c9f5; padding:9px 11px; border-radius:8px; font-size:.85rem; line-height:1.5}
+  .feedback .just b{color:var(--vio-700)}
+  .feedback .histline{display:block; margin-top:6px; font-size:.78rem; color:var(--muted)}
+  .hist{margin-top:16px; border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--vio-50)}
+  .hist-head{display:flex; align-items:center; justify-content:space-between; font-weight:700; color:var(--vio-700); font-size:.92rem; margin-bottom:10px}
+  .hist-reset{background:none; border:none; color:var(--muted); font-size:.74rem; cursor:pointer; text-decoration:underline; padding:0}
+  .hist-stats{display:flex; gap:18px; font-size:.82rem; color:var(--ink); margin-bottom:11px; flex-wrap:wrap}
+  .hist-stats b{color:var(--vio-700); font-size:.95rem}
+  .hist-top{display:flex; flex-direction:column; gap:5px; margin-bottom:13px}
+  .hist-top .ht{display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:.8rem; background:var(--paper); border:1px solid var(--vio-100); border-radius:9px; padding:7px 11px}
+  .hist-top .ht .nq{font-weight:700; color:var(--vio-700)}
+  .hist-top .ht .txt{flex:1; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .hist-top .ht .f{color:var(--bad); font-weight:700; white-space:nowrap}
+  .hist-empty{font-size:.8rem; color:var(--muted); margin-bottom:13px; line-height:1.5}
+  .btn-review{width:100%; padding:12px; border:none; border-radius:12px; font-weight:700; font-size:.95rem; cursor:pointer; background:linear-gradient(135deg,var(--vio-700),var(--vio-500)); color:#fff; box-shadow:var(--shadow)}
+  .btn-review:disabled{opacity:.4; cursor:not-allowed; filter:grayscale(.4); box-shadow:none}
+
+  .qfoot{display:flex; gap:10px; padding:0 20px 20px; flex-wrap:wrap}
+  .btn{font:inherit; cursor:pointer; border-radius:11px; padding:12px 18px; font-weight:700; font-size:.92rem; border:1.5px solid var(--line); background:#fff; color:var(--vio-700); transition:.15s}
+  .btn:hover{border-color:var(--vio-500)}
+  .btn.primary{background:linear-gradient(135deg,var(--vio-700),var(--vio-500)); color:#fff; border:none; box-shadow:0 8px 18px -9px rgba(108,59,196,.7)}
+  .btn.primary:hover{transform:translateY(-1px)}
+  .btn.ghost{background:transparent}
+  .btn.wide{flex:1; min-width:130px; text-align:center}
+  .btn:disabled{opacity:.4; cursor:not-allowed}
+  .spacer{flex:1}
+
+  /* Results */
+  .result{background:var(--paper); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:30px 26px; text-align:center}
+  .result .ring{width:140px; height:140px; margin:0 auto 14px; position:relative}
+  .result .ring svg{transform:rotate(-90deg)}
+  .result .ring .pct{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center}
+  .result .ring .pct b{font-size:2rem; font-weight:800; color:var(--vio-700); line-height:1}
+  .result .ring .pct span{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; font-weight:600}
+  .result h2{margin:.2rem 0; font-size:1.4rem; color:var(--ink)}
+  .result .msg{color:var(--muted); margin-bottom:18px}
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:18px 0}
+  .stat{background:var(--vio-50); border:1px solid var(--line); border-radius:12px; padding:14px 8px}
+  .stat b{display:block; font-size:1.4rem; color:var(--vio-700)}
+  .stat span{font-size:.74rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em}
+  .result .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px}
+
+  footer.ft{text-align:center; color:var(--muted); font-size:.78rem; margin-top:26px; line-height:1.6}
+  .hidden{display:none !important}
+  @media(max-width:540px){
+    .hd h1{font-size:1.3rem}
+    .qt-figs{grid-template-columns:1fr 1fr}
+    .qtext{font-size:1rem}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hd">
+    <div class="eyebrow">Universidad Siglo 21 · Licenciatura en Administración</div>
+    <h1>Estadística II — Segundo Parcial</h1>
+    <div class="sub">Herramientas Matemáticas V · Chi-cuadrado, ANOVA y Regresión/Correlación</div>
+    <div class="meta">
+      <span class="pill">172 preguntas</span>
+      <span class="pill">Teoría + Práctica</span>
+      <span class="pill">Reintenta los errores</span>
+    </div>
+  </header>
+
+  <!-- SETUP -->
+  <section id="setup" class="card">
+    <h2>Configurá tu repaso</h2>
+    <p class="hint">Elegí el bloque, el orden y cómo querés practicar. Tu progreso se guarda en este navegador.</p>
+
+    <div class="seg-label">Bloque de contenido</div>
+    <div class="seg" id="catSeg">
+      <button data-cat="ambas" class="active">Ambas<span class="n" id="cntAmbas">—</span></button>
+      <button data-cat="teoria">Teoría<span class="n" id="cntTeoria">—</span></button>
+      <button data-cat="practica">Práctica<span class="n" id="cntPractica">—</span></button>
+    </div>
+
+    <div class="seg-label">Opciones</div>
+    <div class="row2">
+      <label class="toggle"><input type="checkbox" id="optShuffleQ" checked><span>Mezclar preguntas</span></label>
+      <label class="toggle"><input type="checkbox" id="optShuffleO" checked><span>Mezclar opciones</span></label>
+      <label class="toggle"><input type="checkbox" id="optRetry" checked><span>Reintentar las que fallo</span></label>
+      <label class="toggle"><input type="checkbox" id="optInstant" checked><span>Corrección inmediata</span></label>
+    </div>
+
+    <button class="start" id="btnStart">Comenzar repaso</button>
+    <div id="resumeRow" class="hidden" style="margin-top:12px;text-align:center">
+      <button class="btn ghost" id="btnResume" style="width:100%">↩︎ Retomar intento guardado</button>
+    </div>
+
+    <div class="hist" id="histPanel">
+      <div class="hist-head"><span>📊 Tu historial</span><button class="hist-reset" id="btnResetHist">Reiniciar historial</button></div>
+      <div class="hist-stats">
+        <span>Practicadas: <b id="hPracticadas">0</b>/172</span>
+        <span>Aciertos: <b id="hAciertos">—</b></span>
+        <span>Falladas alguna vez: <b id="hFalladas">0</b></span>
+      </div>
+      <div class="hist-top" id="histTop"></div>
+      <button class="btn-review" id="btnReview" disabled>📌 Repasar las que más fallé</button>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="hidden">
+    <div class="topbar">
+      <div class="progresswrap">
+        <div class="lbls"><span id="progTxt">Pregunta 1</span><span id="poolTxt"></span></div>
+        <div class="bar"><i id="progBar"></i></div>
+      </div>
+      <div class="scorebox">
+        <span class="chip ok">✓ <span id="okCount">0</span></span>
+        <span class="chip bad">✗ <span id="badCount">0</span></span>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div class="qhead">
+        <span class="qtag" id="qTag">Teoría</span>
+        <span class="qmulti hidden" id="qMulti">Selección múltiple</span>
+        <span class="qnum" id="qNum">#1</span>
+      </div>
+      <div class="qbody">
+        <p class="qtext" id="qText"></p>
+        <div class="qt-wrap" id="qTable"></div>
+      </div>
+      <div class="opts" id="opts"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="qfoot" id="qfoot"></div>
+    </div>
+
+    <footer class="ft">
+      Hecho a partir del preguntero de Grupo Verde · 05-10-2025.<br>
+      Cada pregunta trae una <em>justificación para dummies</em> al comprobar. Las respuestas quedan tal cual el preguntero; en las que tienen un error conceptual del original verás un aviso "⚠ Ojo para el examen".
+    </footer>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" class="hidden">
+    <div class="result">
+      <div class="ring">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="62" fill="none" stroke="#efe7fb" stroke-width="14"/>
+          <circle id="ringFg" cx="70" cy="70" r="62" fill="none" stroke="#6d3bc4" stroke-width="14" stroke-linecap="round" stroke-dasharray="389.6" stroke-dashoffset="389.6"/>
+        </svg>
+        <div class="pct"><b id="rPct">0%</b><span>aciertos</span></div>
+      </div>
+      <h2 id="rTitle">¡Terminaste!</h2>
+      <p class="msg" id="rMsg"></p>
+      <div class="stats">
+        <div class="stat"><b id="rOk">0</b><span>Correctas</span></div>
+        <div class="stat"><b id="rBad">0</b><span>Incorrectas</span></div>
+        <div class="stat"><b id="rTot">0</b><span>Respondidas</span></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary wide" id="btnAgain">Repasar de nuevo</button>
+        <button class="btn wide" id="btnReviewResults">📌 Repasar las que más fallé</button>
+        <button class="btn wide" id="btnConfig">Cambiar configuración</button>
+      </div>
+    </div>
+    <footer class="ft">Cada vuelta mezcla el orden si dejaste activada esa opción. ¡Éxitos, Matías!</footer>
+  </section>
+
+</div>
+
+<!-- DATA INJECTED BELOW -->
+<script>// Réplicas de las tablas del preguntero, indexadas por la clave usada en preguntas.js
+const TABLAS = {
+  "produccion-vinos-5": `
+    <table class="qt">
+      <thead><tr><th>Año</th><th>Producción (miles de litros)</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>—</td></tr>
+        <tr><td>2</td><td>—</td></tr>
+        <tr><td>3</td><td>—</td></tr>
+        <tr><td>4</td><td>—</td></tr>
+        <tr><td>5</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Producción de los últimos 5 años (datos no legibles en el original).</p>`,
+
+  "anova-incompleta-generica": `
+    <table class="qt">
+      <thead><tr><th>Fuente</th><th>Grados de libertad</th><th>Suma de cuadrados</th><th>Cuadrados medios</th><th>F</th></tr></thead>
+      <tbody>
+        <tr><td>Entre grupos</td><td>?</td><td>175</td><td>?</td><td rowspan="2">F=?</td></tr>
+        <tr><td>Dentro de grupos</td><td>?</td><td>?</td><td>?</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Salida ANOVA incompleta (completar lo necesario).</p>`,
+
+  "poisson-44-obs": `
+    <table class="qt">
+      <thead><tr><th>Nº de llegadas por hora</th><th>Cantidad de horas</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>4</td></tr>
+        <tr><td>1</td><td>20</td></tr>
+        <tr><td>2</td><td>12</td></tr>
+        <tr><td>3</td><td>5</td></tr>
+        <tr><td>4</td><td>2</td></tr>
+        <tr><td>5</td><td>1</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">44 observaciones de llegadas de clientes por hora.</p>`,
+
+  "poisson-ausencias-50": `
+    <table class="qt">
+      <thead><tr><th>Nº de ausencias</th><th>Cant. empleados</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>4</td></tr>
+        <tr><td>1</td><td>18</td></tr>
+        <tr><td>2</td><td>12</td></tr>
+        <tr><td>3</td><td>10</td></tr>
+        <tr><td>4</td><td>5</td></tr>
+        <tr><td>5</td><td>1</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Frecuencias observadas del número de ausencias mensuales.</p>`,
+
+  "edad-peso-8": `
+    <table class="qt">
+      <thead><tr><th>Edad (años) (x)</th><th>Peso (kg) (y)</th></tr></thead>
+      <tbody>
+        <tr><td>13</td><td>58</td></tr>
+        <tr><td>8</td><td>42</td></tr>
+        <tr><td>10</td><td>51</td></tr>
+        <tr><td>11</td><td>54</td></tr>
+        <tr><td>7</td><td>40</td></tr>
+        <tr><td>8</td><td>39</td></tr>
+        <tr><td>10</td><td>49</td></tr>
+        <tr><td>14</td><td>56</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Registros de edad y peso de niños varones.</p>`,
+
+  "edad-peso-2": `
+    <table class="qt">
+      <thead><tr><th>Edad (años) (x)</th><th>Peso (kg) (y)</th></tr></thead>
+      <tbody>
+        <tr><td>13</td><td>58</td></tr>
+        <tr><td>14</td><td>56</td></tr>
+      </tbody>
+    </table>`,
+
+  "delitos-policias-8": `
+    <div class="qt-scroll">
+    <table class="qt">
+      <thead><tr><th>Distrito</th><th>Policías sem. (x)</th><th>Delitos (y)</th><th>x − x̄</th><th>y − ȳ</th><th>(x − x̄)²</th><th>(y − ȳ)²</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>22</td><td>150</td><td>2</td><td>-2</td><td>4</td><td>4</td></tr>
+        <tr><td>2</td><td>18</td><td>170</td><td>-2</td><td>18</td><td>4</td><td>324</td></tr>
+        <tr><td>3</td><td>15</td><td>210</td><td>-5</td><td>58</td><td>25</td><td>3364</td></tr>
+        <tr><td>4</td><td>12</td><td>215</td><td>8</td><td>63</td><td>64</td><td>3969</td></tr>
+        <tr><td>5</td><td>20</td><td>140</td><td>0</td><td>-12</td><td>0</td><td>144</td></tr>
+        <tr><td>6</td><td>25</td><td>100</td><td>6</td><td>-52</td><td>36</td><td>2704</td></tr>
+        <tr><td>7</td><td>22</td><td>111</td><td>2</td><td>-41</td><td>4</td><td>1681</td></tr>
+        <tr><td>8</td><td>26</td><td>120</td><td>6</td><td>-32</td><td>36</td><td>1024</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="qt-cap">8 distritos (var. independiente: cantidad de policías). Columnas auxiliares de cálculo.</p>`,
+
+  "brillex-3lugares": `
+    <table class="qt">
+      <thead><tr><th>Observación</th><th>Cerca del pan (p)</th><th>Cerca de la cerveza (c)</th><th>Cerca de otros limpiadores (l)</th></tr></thead>
+      <tbody>
+        <tr><td>Observación 1</td><td>18</td><td>12</td><td>26</td></tr>
+        <tr><td>Observación 2</td><td>14</td><td>18</td><td>28</td></tr>
+        <tr><td>Observación 3</td><td>19</td><td>10</td><td>30</td></tr>
+        <tr><td>Observación 4</td><td>17</td><td>16</td><td>32</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Brillex: botellas vendidas en cada lugar del supermercado.</p>`,
+
+  "ford-3conce": `
+    <table class="qt">
+      <thead><tr><th></th><th>TOMAS SRL (T)</th><th>LEAL SA (L)</th><th>PROVIN SA (P)</th></tr></thead>
+      <tbody>
+        <tr><td>Mes 1</td><td>98</td><td>45</td><td>82</td></tr>
+        <tr><td>Mes 2</td><td>78</td><td>50</td><td>60</td></tr>
+        <tr><td>Mes 3</td><td>54</td><td>65</td><td>58</td></tr>
+        <tr><td>Mes 4</td><td>57</td><td>40</td><td>70</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Ventas de las tres concesionarias en los últimos 4 meses.</p>`,
+
+  "anova-techtel": `
+    <table class="qt">
+      <thead><tr><th>Fuente</th><th>GL</th><th>Suma de cuadrados</th><th>Cuadrados medios</th><th>F</th></tr></thead>
+      <tbody>
+        <tr><td>Entre grupos</td><td>?</td><td>?</td><td>?</td><td rowspan="2">F=?</td></tr>
+        <tr><td>Dentro de grupos</td><td>?</td><td>?</td><td>?</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">TECHTEL: 5 centros, 6 grupos de evaluación. Salida ANOVA incompleta.</p>`,
+
+  "ong-energias-4congl": `
+    <table class="qt">
+      <thead><tr><th></th><th>En contra</th><th>Indiferente</th><th>A favor</th><th>Totales</th></tr></thead>
+      <tbody>
+        <tr><td>CABA</td><td>23</td><td>7</td><td>37</td><td>67</td></tr>
+        <tr><td>GBA</td><td>39</td><td>13</td><td>8</td><td>60</td></tr>
+        <tr><td>Rosario</td><td>13</td><td>5</td><td>13</td><td>31</td></tr>
+        <tr><td>Córdoba</td><td>13</td><td>8</td><td>8</td><td>29</td></tr>
+        <tr><td><strong>Totales</strong></td><td><strong>88</strong></td><td><strong>33</strong></td><td><strong>66</strong></td><td><strong>187</strong></td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">ONG: actitud frente a energías renovables en 4 conglomerados.</p>`,
+
+  "ong-energias-tabla-completa": `
+    <table class="qt">
+      <thead><tr><th></th><th>En contra</th><th>Indiferente</th><th>A favor</th><th>Totales</th></tr></thead>
+      <tbody>
+        <tr><td>CABA</td><td>23</td><td>7</td><td>37</td><td>67</td></tr>
+        <tr><td>GBA</td><td>39</td><td>13</td><td>8</td><td>60</td></tr>
+        <tr><td>Rosario</td><td>13</td><td>5</td><td>13</td><td>31</td></tr>
+        <tr><td>Córdoba</td><td>13</td><td>8</td><td>8</td><td>29</td></tr>
+        <tr><td><strong>Totales</strong></td><td><strong>88</strong></td><td><strong>33</strong></td><td><strong>66</strong></td><td><strong>187</strong></td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">ONG: tabla de contingencia completa (4 conglomerados × actitud).</p>`,
+
+  "ausencias-uniforme-6dias": `
+    <table class="qt">
+      <thead><tr><th>Días</th><th>Nº de ausencias</th></tr></thead>
+      <tbody>
+        <tr><td>Lunes</td><td>12</td></tr>
+        <tr><td>Martes</td><td>9</td></tr>
+        <tr><td>Miércoles</td><td>11</td></tr>
+        <tr><td>Jueves</td><td>10</td></tr>
+        <tr><td>Viernes</td><td>9</td></tr>
+        <tr><td>Sábado</td><td>9</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Ausencias observadas en una semana de 6 días.</p>`,
+
+  "jjoo-natacion": `
+    <table class="qt">
+      <thead><tr><th>Mujeres (x)</th><th>Varones (y)</th><th>Estimación de Ŷ</th></tr></thead>
+      <tbody>
+        <tr><td>6,037</td><td>5,07</td><td>5,1129</td></tr>
+        <tr><td>5,713</td><td>5,027</td><td>4,9301</td></tr>
+        <tr><td>5,475</td><td>4,807</td><td>4,7959</td></tr>
+        <tr><td>5,44</td><td>4,742</td><td>4,7762</td></tr>
+        <tr><td>5,297</td><td>4,683</td><td>4,6955</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Tiempos (en minutos) de natación, últimos 5 JJOO.</p>`,
+
+  "figuras-correlacion": `
+    <div class="qt-figs">
+      <div class="qt-fig"><span class="qt-fig-lbl">Figura A</span><svg viewBox="0 0 120 90"><line class="ax" x1="15" y1="80" x2="115" y2="80"/><line class="ax" x1="15" y1="80" x2="15" y2="8"/><circle cx="30" cy="40" r="2.2"/><circle cx="45" cy="60" r="2.2"/><circle cx="55" cy="25" r="2.2"/><circle cx="68" cy="55" r="2.2"/><circle cx="80" cy="35" r="2.2"/><circle cx="92" cy="58" r="2.2"/><circle cx="100" cy="30" r="2.2"/></svg></div>
+      <div class="qt-fig"><span class="qt-fig-lbl">Figura B</span><svg viewBox="0 0 120 90"><line class="ax" x1="15" y1="80" x2="115" y2="80"/><line class="ax" x1="15" y1="80" x2="15" y2="8"/><circle cx="28" cy="18" r="2.2"/><circle cx="40" cy="26" r="2.2"/><circle cx="52" cy="36" r="2.2"/><circle cx="64" cy="44" r="2.2"/><circle cx="76" cy="55" r="2.2"/><circle cx="88" cy="64" r="2.2"/><circle cx="100" cy="73" r="2.2"/></svg></div>
+      <div class="qt-fig"><span class="qt-fig-lbl">Figura C</span><svg viewBox="0 0 120 90"><line class="ax" x1="15" y1="80" x2="115" y2="80"/><line class="ax" x1="15" y1="80" x2="15" y2="8"/><circle cx="28" cy="68" r="2.2"/><circle cx="42" cy="55" r="2.2"/><circle cx="50" cy="62" r="2.2"/><circle cx="64" cy="45" r="2.2"/><circle cx="72" cy="52" r="2.2"/><circle cx="86" cy="34" r="2.2"/><circle cx="100" cy="28" r="2.2"/></svg></div>
+      <div class="qt-fig"><span class="qt-fig-lbl">Figura D</span><svg viewBox="0 0 120 90"><line class="ax" x1="15" y1="80" x2="115" y2="80"/><line class="ax" x1="15" y1="80" x2="15" y2="8"/><circle cx="28" cy="40" r="2.2"/><circle cx="44" cy="58" r="2.2"/><circle cx="52" cy="35" r="2.2"/><circle cx="66" cy="60" r="2.2"/><circle cx="74" cy="48" r="2.2"/><circle cx="88" cy="62" r="2.2"/><circle cx="100" cy="52" r="2.2"/></svg></div>
+    </div>
+    <p class="qt-cap">Diagramas de dispersión (réplica esquemática del original).</p>`,
+
+  "anova-4incognitas": `
+    <table class="qt">
+      <thead><tr><th>Fuente</th><th>GL</th><th>Suma de cuadrados</th><th>Cuadrados medios</th><th>F</th></tr></thead>
+      <tbody>
+        <tr><td>Entre grupos</td><td>?</td><td>?</td><td>?</td><td>?</td></tr>
+        <tr><td>Dentro de grupos</td><td>?</td><td>?</td><td>?</td><td></td></tr>
+        <tr><td>Total</td><td>?</td><td>?</td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Tabla ANOVA con cuatro incógnitas a completar.</p>`,
+
+  "escritorios-3barrios": `
+    <table class="qt">
+      <thead><tr><th></th><th>Barrio 1</th><th>Barrio 2</th><th>Barrio 3</th></tr></thead>
+      <tbody>
+        <tr><td>Comercio 1</td><td>12</td><td>15</td><td>19</td></tr>
+        <tr><td>Comercio 2</td><td>13</td><td>17</td><td>17</td></tr>
+        <tr><td>Comercio 3</td><td>14</td><td>14</td><td>16</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">Precios de escritorios (en miles de pesos) en 3 barrios.</p>`,
+
+  "bono-merval-7": `
+    <div class="qt-scroll">
+    <table class="qt">
+      <thead><tr><th>Bono Discount (X)</th><th>Merval (Y)</th><th>X − X̄</th><th>Y − Ȳ</th><th>(X − X̄)²</th><th>(Y − Ȳ)²</th></tr></thead>
+      <tbody>
+        <tr><td>121,2</td><td>1700</td><td>-1,51</td><td>-9,29</td><td>2,29</td><td>86,22</td></tr>
+        <tr><td>122,1</td><td>1700</td><td>-0,61</td><td>-9,29</td><td>0,38</td><td>86,22</td></tr>
+        <tr><td>122,3</td><td>1697</td><td>-0,41</td><td>-12,29</td><td>0,17</td><td>150,94</td></tr>
+        <tr><td>123,5</td><td>1695</td><td>0,79</td><td>-14,29</td><td>0,62</td><td>204,08</td></tr>
+        <tr><td>122,7</td><td>1709</td><td>-0,01</td><td>-0,29</td><td>0,00</td><td>0,08</td></tr>
+        <tr><td>122,9</td><td>1725</td><td>0,19</td><td>15,71</td><td>0,03</td><td>246,94</td></tr>
+        <tr><td>124,3</td><td>1739</td><td>1,59</td><td>29,71</td><td>2,51</td><td>882,94</td></tr>
+        <tr><td><strong>Sumas: 859</strong></td><td><strong>11965</strong></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td><strong>Promedio: 122,71</strong></td><td><strong>1709,29</strong></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="qt-cap">Precios de cierre del Bono Discount y del Merval (7 días hábiles, enero 2006).</p>`,
+
+  "cemento-prediccion": `
+    <div class="qt-scroll">
+    <table class="qt">
+      <thead><tr><th>Bolsas de cemento de 5 kg (X)</th><th>Costos totales (miles $) (Y)</th><th>X·Y</th><th>X²</th></tr></thead>
+      <tbody>
+        <tr><td>1000</td><td>280</td><td>280000</td><td>1000000</td></tr>
+        <tr><td>950</td><td>266</td><td>252700</td><td>902500</td></tr>
+        <tr><td>500</td><td>170</td><td>85000</td><td>250000</td></tr>
+        <tr><td>800</td><td>250</td><td>200000</td><td>640000</td></tr>
+        <tr><td>1250</td><td>400</td><td>500000</td><td>1562500</td></tr>
+        <tr><td>1500</td><td>440</td><td>660000</td><td>2250000</td></tr>
+        <tr><td><strong>Sumas: 6000</strong></td><td><strong>1806</strong></td><td></td><td></td></tr>
+        <tr><td><strong>Promedio: 1000</strong></td><td><strong>301</strong></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="qt-cap">Registros de producción de cemento (columnas auxiliares de cálculo).</p>`,
+
+  "pampa-piezas-8": `
+    <div class="qt-scroll">
+    <table class="qt">
+      <thead><tr><th>Día</th><th>Tiempo en horas (X)</th><th>Piezas defect. (cientos) (Y)</th><th>X·Y</th><th>X²</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>7,3</td><td>5</td><td>36,5</td><td>53,29</td></tr>
+        <tr><td>2</td><td>8,2</td><td>8</td><td>65,6</td><td>67,24</td></tr>
+        <tr><td>3</td><td>6,1</td><td>3</td><td>18,3</td><td>37,21</td></tr>
+        <tr><td>4</td><td>5,2</td><td>2,4</td><td>12,48</td><td>27,04</td></tr>
+        <tr><td>5</td><td>8,3</td><td>9</td><td>74,7</td><td>68,89</td></tr>
+        <tr><td>6</td><td>7,1</td><td>7</td><td>49,7</td><td>50,41</td></tr>
+        <tr><td>7</td><td>6,4</td><td>6</td><td>38,4</td><td>40,96</td></tr>
+        <tr><td>8</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="qt-cap">PAMPA S.A.: tiempo de uso y piezas defectuosas (8 días, fila 8 no legible).</p>`,
+
+  "ventas-experiencia-10": `
+    <table class="qt">
+      <thead><tr><th>Vendedor</th><th>Años de experiencia</th><th>Ventas anuales (miles $)</th></tr></thead>
+      <tbody>
+        <tr><td>1 a 10</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p class="qt-cap">10 vendedores: años de experiencia vs ventas anuales (datos no legibles en el original).</p>`
+};
+</script>
+<script>// Banco de preguntas - Segundo Parcial Estadística II / Herramientas Matemáticas V
+// cat: "teoria" | "practica" | "ambas"
+// multi: true cuando hay que seleccionar varias correctas
+const PREGUNTAS = [
+  {
+    n: 1,
+    cat: "practica",
+    tabla: "produccion-vinos-5",
+    q: "Se presenta la producción anual de vinos de cierta cepa de una bodega centenaria (últimos 5 años). El coeficiente de regresión es de 2400. ¿Qué significa este coeficiente?",
+    opciones: [
+      "Cada año que transcurre, se estima que la producción aumente 2.400.000 litros",
+      "Cada año que transcurre, se estima que la producción disminuya 2.400.000 litros",
+      "La producción total estimada en 5 años es de 2.400.000 litros",
+      "El 24% de la variabilidad de la producción es explicado por la recta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 2,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cuáles son los conceptos principales de un análisis de regresión lineal múltiple? Seleccione 4 opciones correctas.",
+    opciones: [
+      "La ecuación de regresión lineal múltiple estimada tiene la forma Y = B0 + B1·X1 + B2·X2 + … + Bk·Xk, donde B0, B1, B2 … Bk son los estimadores de β0, β1, β2 … βk respectivamente",
+      "El modelo es una recta de regresión que se ajusta a los datos de la muestra, solo que las variables independientes son dos o más",
+      "Para calcular los parámetros de la recta de regresión, se utiliza el método de mínimos cuadrados",
+      "Para facilitar el cálculo de los parámetros de la recta de regresión, suele recurrirse a las herramientas de álgebra matricial",
+      "El resultado son tantas rectas estimadas como variables independientes se consideren como causa de la variabilidad total de la variable dependiente"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 3,
+    cat: "practica",
+    q: "Canal STC: tras una prueba ANOVA con CMD=125 se concluye que existen diferencias entre las medias. Se realiza un test de Tukey con nivel 0,01. Hay que calcular un solo RC=15,59. ¿Cuándo un par de medias es significativamente diferente?",
+    opciones: [
+      "Un par de medias es significativamente diferente a los otros pares si la diferencia en valor absoluto entre las medias de las muestras comparadas es mayor que el rango crítico RC",
+      "Un par de medias es significativamente diferente si la suma de ambas medias es mayor que el rango crítico RC",
+      "Un par de medias es significativamente diferente si la diferencia entre las medias es menor que el rango crítico RC",
+      "Un par de medias es significativamente diferente si el cociente entre las medias supera el RC"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 4,
+    cat: "practica",
+    tabla: "anova-incompleta-generica",
+    q: "INTERCABLE (San Juan), encuesta a 10 familias calificando 0,1,2. A un nivel de significancia de 0,1 ¿hay diferencias significativas entre los promedios de la cantidad de clientes que responden en cada grupo? (salida ANOVA incompleta)",
+    opciones: [
+      "No existe evidencia estadística para suponer que los promedios de las distintas categorías son iguales",
+      "Existe evidencia estadística para suponer que los promedios de las distintas categorías son iguales",
+      "No se puede concluir nada con los datos disponibles",
+      "Los promedios son exactamente iguales en las tres categorías"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 5,
+    cat: "practica",
+    q: "Cafetería El Progreso: modelo de regresión lineal con variable independiente el precio del pocillo. Si el coeficiente de correlación de Pearson es -0,7772, determina el coeficiente de determinación e interprétalo.",
+    opciones: [
+      "El coeficiente de determinación es 0,604. El 60,4% de la variabilidad total de los kg de café consumidos mensualmente es explicado mediante la recta de regresión estimada",
+      "El coeficiente de determinación es -0,7772. El 77,72% de la variabilidad es explicado por la recta",
+      "El coeficiente de determinación es 0,777. El 77,7% de la variabilidad es explicado por la recta",
+      "El coeficiente de determinación es 0,396. El 39,6% de la variabilidad es explicado por la recta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 6,
+    cat: "practica",
+    tabla: "poisson-44-obs",
+    q: "Gerente de supermercado: 44 observaciones de llegadas de clientes, se supone distribución de Poisson. ¿Qué tipo de prueba debe realizarse y cuál es la frecuencia esperada para 3 clientes?",
+    opciones: [
+      "Debe realizarse una prueba de bondad de ajuste. La frecuencia esperada para 3 clientes es 5,52 horas",
+      "Debe realizarse una prueba ANOVA. La frecuencia esperada para 3 clientes es 5,52 horas",
+      "Debe realizarse una prueba de independencia. La frecuencia esperada para 3 clientes es 12 horas",
+      "Debe realizarse una prueba de bondad de ajuste. La frecuencia esperada para 3 clientes es 3 horas"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 7,
+    cat: "teoria",
+    multi: true,
+    q: "¿Qué son las pruebas de bondad de ajuste? Seleccione 2 respuestas.",
+    opciones: [
+      "Son pruebas de hipótesis que sirven para determinar si una población tiene una distribución teórica específica, basada en evidencia muestral",
+      "Son pruebas de hipótesis que verifican si los datos observados en una muestra aleatoria se ajustan a una determinada distribución de probabilidad",
+      "Son pruebas que comparan las medias de más de dos poblaciones",
+      "Son pruebas que determinan la pendiente de una recta de regresión"
+    ],
+    correctas: [0, 1]
+  },
+  {
+    n: 8,
+    cat: "teoria",
+    q: "¿Para qué se utiliza el rango (o alcance) crítico?",
+    opciones: [
+      "Para poder identificar cuál o cuáles de las medias de una ANOVA difieren significativamente del resto",
+      "Para calcular el coeficiente de determinación de una regresión",
+      "Para determinar la pendiente de la recta de regresión",
+      "Para verificar el supuesto de normalidad en una regresión"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 9,
+    cat: "practica",
+    q: "Empresa de materiales de construcción (cemento): variable independiente el volumen, variable dependiente el costo total. Coeficiente de determinación 0,964. Interpreta dicho coeficiente.",
+    opciones: [
+      "El ajuste es muy bueno: el 96,4% de la variabilidad total del costo es explicado mediante la recta de regresión estimada",
+      "El ajuste es muy bueno: el 9,64% de la variabilidad total del costo es explicado mediante la recta",
+      "El ajuste es malo: solo el 3,6% de la variabilidad del costo es explicado por la recta",
+      "El coeficiente de correlación es 0,964, lo que indica relación moderada"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 10,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cuáles de las siguientes proposiciones son correctas, en un análisis de regresión lineal simple? Seleccione 4 correctas.",
+    opciones: [
+      "El coeficiente de regresión puede ser positivo, negativo o nulo",
+      "El coeficiente de correlación puede adoptar valores en el intervalo [-1 ; 1]",
+      "El coeficiente de determinación puede adoptar valores en el intervalo [0 ; 1]",
+      "La ordenada al origen de la recta de regresión puede ser positiva, negativa o nula",
+      "El coeficiente de determinación puede adoptar valores en el intervalo (-1 ; 1)"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 11,
+    cat: "practica",
+    multi: true,
+    q: "Cafetería El Progreso: si la suma de los cuadrados totales es de 208.875.000, determina la SSR y el coeficiente de determinación. Identifica las 4 opciones correctas.",
+    opciones: [
+      "La intensidad de la relación es fuerte o inversa",
+      "El coeficiente de determinación es 0,8815",
+      "Significa que el 88,15% de la variabilidad es explicado mediante la recta de regresión lineal estimada",
+      "El ajuste lineal es adecuado para predecir el consumo",
+      "SSR = 126,16"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 12,
+    cat: "teoria",
+    q: "¿Cuál es la importancia de utilizar la prueba ANOVA para comparar más de dos medias poblacionales?",
+    opciones: [
+      "Evita la acumulación del error de tipo 1 en la comparación de las medias muestrales",
+      "Evita la acumulación del error de tipo 2 en la comparación de las medias muestrales",
+      "Permite calcular el coeficiente de correlación entre las medias",
+      "Reduce el tamaño de la muestra necesario para cada grupo"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 13,
+    cat: "teoria",
+    q: "En una prueba de bondad de hipótesis de independencia para dos variables categóricas, la hipótesis alternativa establece que las dos variables están relacionadas.",
+    opciones: ["Verdadero", "Falso"],
+    correctas: [0]
+  },
+  {
+    n: 14,
+    cat: "teoria",
+    q: "¿En el ANOVA cuáles de las sumas de los cuadrados tiene más grados de libertad?",
+    opciones: ["SST", "SSE", "SSD", "Todas tienen los mismos grados de libertad"],
+    correctas: [0]
+  },
+  {
+    n: 15,
+    cat: "practica",
+    q: "Si se realiza una prueba de independencia entre dos variables categóricas, y la tabla está formada por 4 filas y 4 columnas, ¿cuántos grados de libertad tiene el estadístico de prueba?",
+    opciones: ["9 grados de libertad", "16 grados de libertad", "12 grados de libertad", "8 grados de libertad"],
+    correctas: [0]
+  },
+  {
+    n: 16,
+    cat: "teoria",
+    q: "¿Qué nos permite calcular la fórmula b0 = Ȳ − b1·X̄?",
+    opciones: [
+      "El estimador de la ordenada al origen de la recta de ajuste de la regresión",
+      "El estimador de la pendiente de la recta de regresión",
+      "El coeficiente de determinación de la regresión",
+      "El error estándar de la estimación"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 17,
+    cat: "teoria",
+    q: "En la prueba de bondad de ajuste para una distribución multinomial de proporciones (más de dos), ¿qué estadístico se utiliza?",
+    opciones: [
+      "Chi cuadrado, con (k-1) grados de libertad, siendo k el número de categorías",
+      "F, con (k-1) grados de libertad en el numerador",
+      "t de Student, con (k-1) grados de libertad",
+      "Chi cuadrado, con (k-2) grados de libertad"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 18,
+    cat: "teoria",
+    q: "¿Cómo se calcula la frecuencia esperada de una celda en una prueba de independencia de dos variables categóricas (tabla de contingencia)?",
+    opciones: [
+      "Se multiplica la frecuencia marginal de la fila de la celda por la frecuencia marginal de la columna de la celda. Luego se divide este resultado por el tamaño total de la muestra",
+      "Se suman las frecuencias marginales de la fila y la columna de la celda",
+      "Se multiplica la frecuencia observada de la celda por el tamaño total de la muestra",
+      "Se divide la frecuencia marginal de la fila por la frecuencia marginal de la columna"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 19,
+    cat: "practica",
+    q: "De un periódico financiero se extrajeron 7 días los precios de cierre. Se obtuvo un coeficiente de determinación de 0,407. ¿Cuánto vale el coeficiente de correlación si la relación es directa y cómo calificarías la relación?",
+    opciones: [
+      "El coeficiente de correlación es 0,638. La intensidad es moderada",
+      "El coeficiente de correlación es 0,407. La intensidad es débil",
+      "El coeficiente de correlación es -0,638. La intensidad es moderada e inversa",
+      "El coeficiente de correlación es 0,166. La intensidad es muy débil"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 20,
+    cat: "practica",
+    q: "Una bodega centenaria, producción de los últimos 10 años en miles de litros. Ecuación de estimación: Y = 1344·X + 7573. Interpreta el coeficiente de regresión.",
+    opciones: [
+      "Se estima que por cada año transcurrido la producción aumenta en promedio 1.344.000 litros de vino",
+      "Se estima que por cada año transcurrido la producción aumenta en promedio 7.573.000 litros de vino",
+      "Se estima que por cada año transcurrido la producción disminuye en promedio 1.344.000 litros de vino",
+      "La producción inicial estimada es de 1.344.000 litros de vino"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 21,
+    cat: "teoria",
+    q: "¿Cómo se llama la ecuación Y = β0 + β1·X en su forma general?",
+    opciones: [
+      "Ecuación de la recta de regresión estimada",
+      "Ecuación del coeficiente de determinación",
+      "Ecuación del error estándar de la estimación",
+      "Ecuación de la varianza poblacional"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 22,
+    cat: "teoria",
+    q: "¿Cuál es el objetivo de una prueba de bondad de ajuste?",
+    opciones: [
+      "Determinar qué tan cerca se encuentran los resultados muestrales de los esperados",
+      "Comparar las medias de más de dos poblaciones",
+      "Estimar la pendiente de la recta de regresión",
+      "Determinar si dos variables categóricas son independientes"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 23,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cuáles son las principales características de la distribución F? Seleccione 4 respuestas correctas.",
+    opciones: [
+      "Se basa en dos conjuntos de grados de libertad",
+      "Es una distribución de variable continua",
+      "Tiene sesgo positivo",
+      "El eje X es asíntota",
+      "Es una distribución de variable discreta"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 24,
+    cat: "practica",
+    q: "Considerando una tabla de contingencia con 2 filas y 5 columnas, prueba de independencia. ¿Cuál es el valor crítico del estadístico de prueba para un nivel de significancia de 0,05?",
+    opciones: ["El valor crítico es 9,488", "El valor crítico es 11,070", "El valor crítico es 7,815", "El valor crítico es 9,236"],
+    correctas: [0]
+  },
+  {
+    n: 25,
+    cat: "teoria",
+    q: "¿Cuál es la hipótesis nula de la prueba ANOVA?",
+    opciones: [
+      "Todas las medias poblacionales son iguales",
+      "Al menos una media poblacional es diferente",
+      "Las variables son independientes",
+      "La variable tiene la distribución supuesta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 26,
+    cat: "teoria",
+    q: "¿Cómo se determinan los grados de libertad en una prueba de bondad de ajuste de Poisson?",
+    opciones: [
+      "Grados de libertad = k − p − 1, siendo k el número de clases y p el número de parámetros estimados",
+      "Grados de libertad = k − 1, siendo k el número de clases",
+      "Grados de libertad = k − p, siendo k el número de clases y p los parámetros estimados",
+      "Grados de libertad = (filas − 1)·(columnas − 1)"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 27,
+    cat: "teoria",
+    q: "En el análisis residual, ¿a qué llamamos residuo?",
+    opciones: [
+      "A la diferencia entre cada valor de Y observado y el valor estimado de dicha variable mediante la regresión",
+      "A la suma de los valores de Y observados",
+      "Al producto entre el valor observado y el valor estimado de Y",
+      "A la diferencia entre cada valor de X y su media"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 28,
+    cat: "teoria",
+    q: "Analizando las medidas de variabilidad de una regresión lineal simple, si se ha obtenido un mal ajuste ¿cuál opción es la más acertada?",
+    opciones: [
+      "Cuando hay valores altos de SSE respecto a SST",
+      "Cuando hay valores bajos de SSE respecto a SST",
+      "Cuando SSR es igual a SST",
+      "Cuando el coeficiente de determinación es cercano a 1"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 29,
+    cat: "teoria",
+    q: "¿A qué se refiere el supuesto de normalidad que debe evaluarse antes de realizar un análisis de regresión lineal simple?",
+    opciones: [
+      "Se refiere a cómo deben comportarse los valores de Y para cada valor de X alrededor de su media",
+      "Se refiere a que los errores de un período no se correlacionen con los del período previo",
+      "Se refiere a que la varianza de los errores sea constante",
+      "Se refiere a que la relación entre las variables sea lineal"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 30,
+    cat: "practica",
+    q: "En una prueba de bondad de ajuste de Poisson de 5 clases y el parámetro λ estimado, ¿cuántos grados de libertad tiene el estadístico de prueba?",
+    opciones: ["3 grados de libertad", "4 grados de libertad", "5 grados de libertad", "2 grados de libertad"],
+    correctas: [0]
+  },
+  {
+    n: 31,
+    cat: "practica",
+    q: "PAMPA S.A.: asociación entre piezas defectuosas y horas de uso. Coeficiente de determinación 0,733 (var. independiente: tiempo en horas; dependiente: piezas defectuosas). ¿Cómo interpretas este coeficiente?",
+    opciones: [
+      "El 73,3% de la variabilidad total de las piezas defectuosas producidas por la máquina es explicado mediante la recta de regresión lineal estimada",
+      "El 7,33% de la variabilidad total de las piezas defectuosas es explicado por la recta",
+      "El 26,7% de la variabilidad total de las piezas defectuosas es explicado por la recta",
+      "El coeficiente de correlación es 0,733, lo que indica relación moderada"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 32,
+    cat: "practica",
+    q: "Secretaría de desarrollo social: consumo de alimentos vs ingreso per cápita. Coeficiente de determinación 0,846 y SST = 9.845 (en millones). Calcula la suma de los cuadrados debido a la regresión.",
+    opciones: [
+      "El valor de la suma de los cuadrados debido a la regresión es 8.329",
+      "El valor de la suma de los cuadrados debido a la regresión es 1.516",
+      "El valor de la suma de los cuadrados debido a la regresión es 9.845",
+      "El valor de la suma de los cuadrados debido a la regresión es 8.466"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 33,
+    cat: "practica",
+    q: "En un experimento ANOVA se tienen 4 grupos de 5 observaciones cada uno. Encuentra el valor crítico de F si la prueba se realiza con un nivel de significancia de 0,5.",
+    opciones: ["El valor crítico es 3,239", "El valor crítico es 8,022", "El valor crítico es 4,256", "El valor crítico es 5,780"],
+    correctas: [0]
+  },
+  {
+    n: 34,
+    cat: "teoria",
+    q: "¿Para qué se utiliza el estadístico F = CME/CMD con c−1 g.l. en el numerador y n−c g.l. en el denominador?",
+    opciones: [
+      "Es el estadístico de prueba que se utiliza para el ANOVA",
+      "Es el estadístico que se utiliza para la prueba de bondad de ajuste",
+      "Es el estadístico que se utiliza para la prueba de independencia",
+      "Es el estadístico que se utiliza para calcular el coeficiente de determinación"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 35,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cuáles son los supuestos básicos que deben controlarse al utilizar un análisis de regresión lineal simple? Seleccione las 4 opciones correctas.",
+    opciones: [
+      "Independencia de errores",
+      "Normalidad",
+      "Homocedasticidad",
+      "Linealidad",
+      "Homogeneidad de las proporciones"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 36,
+    cat: "teoria",
+    q: "¿Qué indica la pendiente de una regresión lineal?",
+    opciones: [
+      "Cuánto varía la variable dependiente cuando la variable independiente varía una unidad",
+      "El valor de Y cuando X es igual a cero",
+      "El porcentaje de variabilidad explicado por la recta",
+      "La intensidad de la relación entre las variables"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 37,
+    cat: "practica",
+    tabla: "poisson-ausencias-50",
+    q: "Prueba de Poisson de ausencias (n a determinar). Bajo H0 cierta, calcula el tamaño de muestra, la media estimada, la frecuencia esperada para 2 ausencias y los grados de libertad (agrupando las 3 últimas clases).",
+    opciones: [
+      "La muestra es N=50. La media estimada es λ=1,32. La frecuencia esperada para 2 ausencias es 11,685 empleados. Los grados de libertad son 2",
+      "La muestra es N=44. La media estimada es λ=1,5. La frecuencia esperada para 2 ausencias es 12 empleados. Los grados de libertad son 3",
+      "La muestra es N=50. La media estimada es λ=2. La frecuencia esperada para 2 ausencias es 10 empleados. Los grados de libertad son 4",
+      "La muestra es N=50. La media estimada es λ=1,32. La frecuencia esperada para 2 ausencias es 11,685 empleados. Los grados de libertad son 5"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 38,
+    cat: "practica",
+    q: "¡Comidas ya!: afirma 20% empanadas, 50% pizza, 20% lomito, 10% otras. Muestra de 300 personas. Determina las frecuencias esperadas para cada categoría.",
+    opciones: [
+      "FE(E)=60, FE(P)=150, FE(L)=60, FE(O)=30",
+      "FE(E)=60, FE(P)=135, FE(L)=72, FE(O)=33",
+      "FE(E)=20, FE(P)=50, FE(L)=20, FE(O)=10",
+      "FE(E)=75, FE(P)=75, FE(L)=75, FE(O)=75"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 39,
+    cat: "practica",
+    tabla: "edad-peso-8",
+    multi: true,
+    q: "Indumentaria de niños: relación edad-peso. Coeficiente de determinación 0,885, ajuste lineal y relación directa. Interpreta y selecciona las 4 opciones correctas.",
+    opciones: [
+      "El 88,5% de la variabilidad total del peso de los niños se explica mediante la recta de regresión estimada",
+      "El coeficiente de correlación es 0,941",
+      "El modelo es apropiado para predecir los pesos de los niños",
+      "La intensidad de la relación entre las variables es fuerte",
+      "El coeficiente de correlación es 0,885 e indica relación moderada"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 40,
+    cat: "teoria",
+    q: "Si en un análisis de regresión simple, los errores de un período se correlacionan con los del período previo, ¿cuál supuesto se viola?",
+    opciones: ["Independencia de errores", "Normalidad", "Homocedasticidad", "Linealidad"],
+    correctas: [0]
+  },
+  {
+    n: 41,
+    cat: "practica",
+    q: "En un experimento ANOVA se tienen 3 grupos de 8 observaciones cada uno. Encuentra el valor crítico con un nivel de significancia de 0,01.",
+    opciones: ["El valor crítico es 5,780", "El valor crítico es 3,239", "El valor crítico es 8,022", "El valor crítico es 4,256"],
+    correctas: [0]
+  },
+  {
+    n: 42,
+    cat: "teoria",
+    q: "Si en una prueba de independencia de dos variables categóricas χ² de prueba ≥ χ² crítico, entonces:",
+    opciones: [
+      "Se rechaza la hipótesis nula",
+      "No se rechaza la hipótesis nula",
+      "Las variables son independientes",
+      "No se puede concluir nada"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 43,
+    cat: "teoria",
+    q: "¿Cómo se interpreta el error estándar estimado en una regresión lineal simple?",
+    opciones: [
+      "Mide la variabilidad alrededor de la línea de predicción",
+      "Mide la pendiente de la recta de regresión",
+      "Mide el porcentaje de variabilidad explicado por la recta",
+      "Mide la diferencia entre las medias poblacionales"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 44,
+    cat: "practica",
+    tabla: "delitos-policias-8",
+    q: "Relación lineal entre cantidad de delitos y número de policías (8 distritos, var. independiente: policías). Determina la intensidad y el sentido de la relación.",
+    opciones: [
+      "La intensidad y dirección de la relación lineal es -0,935. La relación es inversa y fuerte",
+      "La intensidad y dirección de la relación lineal es 0,935. La relación es directa y fuerte",
+      "La intensidad y dirección de la relación lineal es -0,5. La relación es inversa y moderada",
+      "La intensidad y dirección de la relación lineal es -0,874. La relación es inversa y fuerte"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 45,
+    cat: "teoria",
+    q: "En la prueba Chi-cuadrado de independencia de dos variables categóricas, ¿dónde se ubica la zona de rechazo?",
+    opciones: [
+      "En la cola superior de la distribución limitada por el valor crítico de chi cuadrado",
+      "En la cola inferior de la distribución limitada por el valor crítico de chi cuadrado",
+      "En ambas colas de la distribución",
+      "En el centro de la distribución"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 46,
+    cat: "teoria",
+    q: "¿Qué sucede cuando la relación lineal entre dos variables es directa?",
+    opciones: [
+      "El estimador de la pendiente es positivo",
+      "El estimador de la pendiente es negativo",
+      "El estimador de la pendiente es cero",
+      "El coeficiente de determinación es negativo"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 47,
+    cat: "teoria",
+    q: "¿Qué permite el análisis de regresión lineal simple?",
+    opciones: [
+      "Predecir valores de la variable dependiente a partir de los valores que adopte la variable independiente",
+      "Comparar las medias de más de dos poblaciones",
+      "Determinar si dos variables categóricas son independientes",
+      "Verificar si los datos siguen una distribución de Poisson"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 48,
+    cat: "teoria",
+    q: "¿Cuál es el objetivo de la prueba ANOVA?",
+    opciones: [
+      "Comparar la media de más de dos poblaciones",
+      "Determinar la pendiente de la recta de regresión",
+      "Verificar si dos variables categóricas son independientes",
+      "Estimar el coeficiente de determinación"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 49,
+    cat: "practica",
+    tabla: "brillex-3lugares",
+    q: "Brillex (3 lugares, Córdoba). A un nivel de significancia de 0,05 ¿cuál es el valor de los cuadrados medios entre grupos (CME)?",
+    opciones: ["CME = 252", "CME = 74", "CME = 531,58", "CME = 14,11"],
+    correctas: [0]
+  },
+  {
+    n: 50,
+    cat: "practica",
+    q: "En un experimento ANOVA con 2 grupos de 10 observaciones cada uno, indica el par de grados de libertad.",
+    opciones: [
+      "GL numerador = 1, GL denominador = 18",
+      "GL numerador = 2, GL denominador = 18",
+      "GL numerador = 1, GL denominador = 20",
+      "GL numerador = 18, GL denominador = 1"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 51,
+    cat: "practica",
+    tabla: "ford-3conce",
+    multi: true,
+    q: "3 concesionarias Ford (ventas de 4 meses). A un nivel de significancia del 0,01 ¿cuáles son las 4 opciones que corresponden a esta prueba?",
+    opciones: [
+      "F crítico: 8,022",
+      "Ho: μT = μL = μP",
+      "Los grados de libertad de F son (2;9)",
+      "X̄ = 63,08",
+      "F crítico: 4,256"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 52,
+    cat: "teoria",
+    q: "En una prueba de bondad de ajuste para datos categóricos, ¿cómo se obtiene la frecuencia esperada de cada categoría?",
+    opciones: [
+      "Multiplicando el tamaño de la muestra por la proporción hipotética de esa categoría bajo hipótesis nula cierta",
+      "Sumando las frecuencias observadas de cada categoría",
+      "Dividiendo el tamaño de la muestra por el número de categorías",
+      "Multiplicando las frecuencias marginales de fila y columna"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 53,
+    cat: "teoria",
+    q: "En un análisis de regresión lineal simple, ¿qué hace el coeficiente de determinación R²?",
+    opciones: [
+      "Asume valores en el intervalo (0 ; 1)",
+      "Asume valores en el intervalo (-1 ; 1)",
+      "Asume valores en el intervalo (-1 ; 0)",
+      "Asume cualquier valor real"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 54,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cuáles de las siguientes afirmaciones corresponden a una prueba de hipótesis ANOVA? Seleccione 4 respuestas.",
+    opciones: [
+      "El estadístico de prueba puede obtenerse conociendo SSE, SST, la cantidad de grupos y el tamaño de cada uno de los grupos",
+      "El estadístico F será cercano a 1 si las variaciones entre grupos y las variaciones dentro de grupos son aproximadamente iguales",
+      "El estadístico de prueba se obtiene como el cociente entre los cuadrados medios entre grupos y los cuadrados medios dentro de grupos",
+      "Se utiliza la distribución F con n-c grados de libertad en el numerador y c-1 grados de libertad en el denominador (n: total de observaciones; c: cantidad de grupos)",
+      "El estadístico de prueba sigue una distribución chi-cuadrado"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 55,
+    cat: "practica",
+    q: "Canal STC: test de Tukey con nivel 0,01 para 3 provincias. ¿Cuántas comparaciones de medias deben realizar y cuál es el valor crítico de Q?",
+    opciones: [
+      "Las comparaciones a realizar son 3. El valor crítico de Q es Q 0,01 (3;33) = 4,42",
+      "Las comparaciones a realizar son 2. El valor crítico de Q es Q 0,01 (3;33) = 4,42",
+      "Las comparaciones a realizar son 3. El valor crítico de Q es Q 0,05 (3;33) = 3,49",
+      "Las comparaciones a realizar son 6. El valor crítico de Q es Q 0,01 (3;33) = 4,42"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 56,
+    cat: "teoria",
+    q: "El test de Tukey se aplica cuando se rechaza la hipótesis nula en el ANOVA.",
+    opciones: ["Verdadero", "Falso"],
+    correctas: [0]
+  },
+  {
+    n: 57,
+    cat: "practica",
+    tabla: "anova-techtel",
+    multi: true,
+    q: "TECHTEL (5 centros, 6 grupos). A nivel 0,05 ¿hay diferencias significativas? Identifica 4 sentencias relacionadas a esta prueba.",
+    opciones: [
+      "El valor del estadístico de prueba F es 2,583",
+      "No se rechaza la H0",
+      "Existe evidencia estadística para no descartar que el promedio de clientes que opina en cada grupo sea aproximadamente igual",
+      "El valor crítico de F es 2,621",
+      "Existe evidencia estadística suficiente para concluir que al menos uno de los grupos es significativamente distinto al resto"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 58,
+    cat: "teoria",
+    q: "¿Para qué se utiliza el cociente entre la suma de los cuadrados de la regresión y la suma total de cuadrados, en un análisis de regresión lineal simple?",
+    opciones: [
+      "Para calcular el coeficiente de determinación",
+      "Para calcular la pendiente de la recta",
+      "Para calcular el error estándar de la estimación",
+      "Para calcular la ordenada al origen"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 59,
+    cat: "teoria",
+    q: "¿Cuál de las siguientes relaciones se verifica en la tabla ANOVA?",
+    opciones: ["SST = SSE + SSD", "SST = SSE − SSD", "SSE = SST + SSD", "SSD = SST + SSE"],
+    correctas: [0]
+  },
+  {
+    n: 60,
+    cat: "practica",
+    tabla: "brillex-3lugares",
+    q: "Brillex (3 lugares). A nivel 0,05 ¿cuál es la regla de decisión para esta prueba?",
+    opciones: [
+      "Si el estadístico de prueba es mayor o igual a 4,103, se rechaza la H0. Si es menor a 4,103 no se rechaza la H0",
+      "Si el estadístico de prueba es mayor o igual a 4,256, se rechaza la H0. Si es menor a 4,256 no se rechaza la H0",
+      "Si el estadístico de prueba es mayor o igual a 8,022, se rechaza la H0. Si es menor a 8,022 no se rechaza la H0",
+      "Si el estadístico de prueba es menor a 4,103, se rechaza la H0. Si es mayor no se rechaza la H0"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 61,
+    cat: "practica",
+    tabla: "brillex-3lugares",
+    q: "Brillex (3 lugares). A nivel 0,05, formula las hipótesis nula y alternativa e indica qué estadístico utilizaste.",
+    opciones: [
+      "Ho: μp = μe = μl ; H1: μp, μe, μl no son todas iguales. El estadístico que se utiliza es F",
+      "Ho: μp ≠ μe ≠ μl ; H1: μp = μe = μl. El estadístico que se utiliza es F",
+      "Ho: las variables son independientes ; H1: las variables están relacionadas. El estadístico es χ²",
+      "Ho: μp = μe = μl ; H1: al menos una media es mayor. El estadístico que se utiliza es t"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 62,
+    cat: "teoria",
+    q: "¿A qué se refiere la hipótesis nula en una prueba de bondad de ajuste?",
+    opciones: [
+      "La variable tiene la distribución supuesta",
+      "La variable no tiene la distribución supuesta",
+      "Las dos variables categóricas son independientes",
+      "Todas las medias poblacionales son iguales"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 63,
+    cat: "teoria",
+    q: "En la prueba ANOVA, si los CMD y CME tienden a ser iguales, se rechaza la hipótesis nula.",
+    opciones: ["Falso", "Verdadero"],
+    correctas: [0]
+  },
+  {
+    n: 64,
+    cat: "teoria",
+    q: "¿Cómo se calcula el error de la suma de cuadrados SSE?",
+    opciones: [
+      "Es la sumatoria de los cuadrados de las diferencias entre el valor observado de Y y el valor predicho de Y",
+      "Es la sumatoria de los cuadrados de las diferencias entre el valor predicho de Y y la media de Y",
+      "Es la sumatoria de los cuadrados de las diferencias entre cada valor de Y y la media de Y",
+      "Es el producto entre SSR y SST"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 65,
+    cat: "practica",
+    q: "Muestra de 10 observaciones, regresión lineal simple. Coeficiente de determinación 0,524 y SST = 5290. ¿Cuánto vale el error estándar muestral de la estimación y qué significa?",
+    opciones: [
+      "Syx = 17,74. Mide la variabilidad alrededor de la línea de predicción",
+      "Syx = 5290. Mide la variabilidad alrededor de la línea de predicción",
+      "Syx = 0,524. Mide la pendiente de la recta",
+      "Syx = 52,4. Mide el porcentaje de variabilidad explicado"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 66,
+    cat: "practica",
+    q: "Secretaría de desarrollo social: consumo vs ingreso per cápita. Coeficiente de determinación 0,948. Interpreta, expresa intensidad y sentido. ¿Es buena herramienta para predecir?",
+    opciones: [
+      "El 94,8% de la variabilidad total de los consumos se explica por la recta de regresión estimada. R = 0,9736. Se trata de una relación muy fuerte, por lo que la recta es una muy buena herramienta para predecir los consumos",
+      "El 9,48% de la variabilidad total se explica por la recta. R = 0,948. Relación moderada",
+      "El 94,8% de la variabilidad se explica por la recta. R = 0,948. Relación fuerte e inversa",
+      "El 89,8% de la variabilidad se explica por la recta. R = 0,9476. Relación fuerte"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 67,
+    cat: "practica",
+    q: "Empresa de cemento: coeficiente de determinación 0,964, a mayor volumen mayor costo. Determina el coeficiente de correlación y comenta la correlación.",
+    opciones: [
+      "R = 0,982. La correlación entre ambas variables es muy fuerte, casi perfecta",
+      "R = 0,964. La correlación entre ambas variables es moderada",
+      "R = -0,982. La correlación entre ambas variables es muy fuerte e inversa",
+      "R = 0,929. La correlación entre ambas variables es fuerte"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 68,
+    cat: "practica",
+    tabla: "jjoo-natacion",
+    q: "JJOO natación: ecuación de regresión Y = 0,564·x + 1,708 (var. independiente: mujeres). Calcula el tiempo estimado de varones si el promedio de mujeres es 5,328 minutos e interpreta.",
+    opciones: [
+      "4,713 minutos. Se espera que en los próximos JJOO los varones hagan en promedio 4,713 minutos si las mujeres tienen un promedio de 5,328 minutos",
+      "5,328 minutos. Se espera que los varones igualen el tiempo de las mujeres",
+      "3,005 minutos. Se espera que los varones mejoren su marca a 3,005 minutos",
+      "1,708 minutos. Es el tiempo base estimado para los varones"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 69,
+    cat: "teoria",
+    tabla: "figuras-correlacion",
+    multi: true,
+    q: "Observa las figuras de dispersión A, B, C y D. Asocia cada figura con su tipo de correlación (selecciona las 4 correctas).",
+    opciones: [
+      "En la figura C, la correlación es moderada y positiva",
+      "En la figura B, la correlación es fuerte y negativa",
+      "En la figura D, la correlación es débil y negativa",
+      "En la figura A, no hay correlación entre las variables",
+      "En la figura A, la correlación es fuerte y positiva"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 70,
+    cat: "teoria",
+    q: "¿Cuáles son los parámetros de la recta de regresión estimada?",
+    opciones: [
+      "La ordenada al origen estimada b0 y el coeficiente de regresión b1",
+      "El coeficiente de determinación R² y el error estándar",
+      "La media de X y la media de Y",
+      "La suma de cuadrados SSR y SST"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 71,
+    cat: "practica",
+    tabla: "poisson-ausencias-50",
+    q: "INNOVA S.A. (ausentismo): Poisson. Bajo H0 cierta, calcula tamaño de muestra, media estimada, frecuencia esperada para 2 ausencias y grados de libertad (agrupando las 3 últimas clases).",
+    opciones: [
+      "La muestra es N=50. La media estimada es λ=1,32. La frecuencia esperada para 2 ausencias es 11,685 empleados. Los grados de libertad son 2",
+      "La muestra es N=50. La media estimada es λ=2. La frecuencia esperada para 2 ausencias es 12 empleados. Los grados de libertad son 3",
+      "La muestra es N=44. La media estimada es λ=1,5. La frecuencia esperada para 2 ausencias es 11 empleados. Los grados de libertad son 2",
+      "La muestra es N=50. La media estimada es λ=1,32. La frecuencia esperada para 2 ausencias es 12 empleados. Los grados de libertad son 4"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 72,
+    cat: "practica",
+    q: "Si en un análisis de regresión lineal simple SSR=106 y SST=240, calcula el coeficiente de determinación R² e interprétalo.",
+    opciones: [
+      "R² = 0,4417. El 44,17% de la variabilidad total del conjunto de datos es explicado por la recta de ajuste",
+      "R² = 0,5583. El 55,83% de la variabilidad total es explicado por la recta de ajuste",
+      "R² = 2,2641. El 226,41% de la variabilidad es explicado por la recta",
+      "R² = 0,664. El 66,4% de la variabilidad es explicado por la recta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 73,
+    cat: "practica",
+    q: "PAMPA S.A.: coeficiente de determinación 0,733. Calcula el coeficiente de correlación lineal y comenta la intensidad del ajuste.",
+    opciones: [
+      "R = 0,856. La intensidad es significativa. Puede considerarse fuerte",
+      "R = 0,733. La intensidad es moderada",
+      "R = 0,537. La intensidad es débil",
+      "R = -0,856. La intensidad es fuerte e inversa"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 74,
+    cat: "practica",
+    q: "Si en un análisis de regresión lineal simple SSE=25 y SSR=75, calcula el coeficiente de determinación R² e interprétalo.",
+    opciones: [
+      "R² = 0,75. El 75% de la variabilidad total del conjunto de datos es explicada por la recta de ajuste",
+      "R² = 0,25. El 25% de la variabilidad total es explicada por la recta de ajuste",
+      "R² = 0,33. El 33% de la variabilidad total es explicada por la recta de ajuste",
+      "R² = 3. El 300% de la variabilidad es explicada por la recta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 75,
+    cat: "teoria",
+    multi: true,
+    q: "Si en las medidas de variabilidad de un modelo de regresión lineal simple SSE=0, ¿cuáles opciones son correctas? Seleccione 4.",
+    opciones: [
+      "Hay ajuste perfecto entre los datos y todos los puntos de la recta de ajuste",
+      "SST = SSR",
+      "El Y observado y el Y estimado son iguales en todas las observaciones",
+      "El coeficiente de determinación R² es igual a 1",
+      "Los residuos que corresponden a una observación se compensan"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 76,
+    cat: "teoria",
+    q: "En una prueba de chi cuadrado de independencia de dos variables categóricas, ¿cuál es la hipótesis nula?",
+    opciones: [
+      "Las dos variables categóricas son independientes",
+      "Las dos variables categóricas están relacionadas",
+      "Todas las medias poblacionales son iguales",
+      "La variable tiene la distribución supuesta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 77,
+    cat: "teoria",
+    q: "El análisis de regresión lineal no informa sobre el sentido o dirección de la relación entre las variables.",
+    opciones: ["Falso", "Verdadero"],
+    correctas: [0]
+  },
+  {
+    n: 78,
+    cat: "teoria",
+    q: "¿Cuál es la fórmula de la varianza que se llama cuadrados medios entre (CME)?",
+    opciones: [
+      "CME = SSE / (c − 1)",
+      "CME = SSD / (n − c)",
+      "CME = SST / (n − 1)",
+      "CME = SSE / (n − c)"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 79,
+    cat: "teoria",
+    q: "¿Qué nos indica un coeficiente de determinación R²=0,587 en un análisis de regresión lineal simple?",
+    opciones: [
+      "Expresado en porcentaje, significa que la variabilidad total de la variable dependiente Y es explicada en un 58,7% por la recta de regresión estimada o ajustada",
+      "Significa que el coeficiente de correlación es 0,587",
+      "Significa que el 41,3% de la variabilidad es explicada por la recta",
+      "Significa que la pendiente de la recta es 0,587"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 80,
+    cat: "practica",
+    tabla: "poisson-44-obs",
+    q: "Gerente de supermercado (44 obs., Poisson). Estima la media de llegadas por hora y enuncia las hipótesis nula y alternativa.",
+    opciones: [
+      "λ = 1,5 clientes en una hora. H0: el número de clientes que llegan cada hora sigue una distribución de Poisson. H1: el número de clientes que llegan cada hora no sigue una distribución de Poisson",
+      "λ = 2 clientes en una hora. H0: las llegadas no siguen Poisson. H1: las llegadas siguen Poisson",
+      "λ = 1,5 clientes en una hora. H0: el número de clientes no sigue Poisson. H1: el número de clientes sigue Poisson",
+      "λ = 44 clientes en una hora. H0: las llegadas siguen Poisson. H1: las llegadas no siguen Poisson"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 81,
+    cat: "practica",
+    tabla: "ong-energias-4congl",
+    q: "ONG energías renovables (4 conglomerados, nivel 0,01). Calcula el valor crítico, el estadístico de prueba, la decisión y conclusión.",
+    opciones: [
+      "χ² = 10,645. χ² calculado = 27,42. Se rechaza la hipótesis nula. Los lugares encuestados no están relacionados con la actitud de los ciudadanos",
+      "χ² = 25,41. χ² calculado = 12,592. No se rechaza la hipótesis nula. Los lugares están relacionados con la actitud",
+      "χ² = 12,592. χ² calculado = 10,645. Se rechaza la hipótesis nula. Las variables son independientes",
+      "χ² = 10,645. χ² calculado = 9,488. No se rechaza la hipótesis nula"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 82,
+    cat: "teoria",
+    q: "En un análisis de regresión lineal simple, ¿cómo es la relación entre las variables si la recta de regresión estimada tiene pendiente cero?",
+    opciones: [
+      "Las variables tienen una relación curvilínea",
+      "Las variables tienen una relación lineal directa",
+      "Las variables tienen una relación lineal inversa",
+      "Las variables están perfectamente correlacionadas"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 83,
+    cat: "teoria",
+    q: "El estadístico que se utiliza en la prueba ANOVA tiene distribución Chi-cuadrado.",
+    opciones: ["Falso", "Verdadero"],
+    correctas: [0]
+  },
+  {
+    n: 84,
+    cat: "teoria",
+    q: "El R² genera valores en el intervalo (-1 ; 1).",
+    opciones: ["Falso", "Verdadero"],
+    correctas: [0]
+  },
+  {
+    n: 85,
+    cat: "teoria",
+    q: "En un análisis de regresión lineal simple, ¿a qué se refiere la fórmula √(SSE/(n−2))?",
+    opciones: [
+      "Al error estándar de la estimación",
+      "Al coeficiente de determinación",
+      "A la pendiente de la recta de regresión",
+      "A la suma total de cuadrados"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 86,
+    cat: "teoria",
+    multi: true,
+    q: "Para poder realizar la prueba ANOVA, ¿cuáles supuestos deben verificarse? Seleccione 3 respuestas correctas.",
+    opciones: [
+      "Aleatoriedad e independencia",
+      "Normalidad",
+      "Homogeneidad de las varianzas",
+      "Linealidad de la relación"
+    ],
+    correctas: [0, 1, 2]
+  },
+  {
+    n: 87,
+    cat: "practica",
+    tabla: "ford-3conce",
+    q: "3 concesionarias Ford (nivel 0,01). ¿Cuál prueba debe realizar y cuál es el valor de los cuadrados medios entre grupos?",
+    opciones: [
+      "La prueba ANOVA de un factor. CME = 531,58",
+      "La prueba de independencia chi-cuadrado. CME = 531,58",
+      "La prueba ANOVA de un factor. CME = 252",
+      "La prueba de bondad de ajuste. CME = 14,11"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 88,
+    cat: "teoria",
+    q: "En una regresión lineal, si el estimador de la pendiente es positivo y el estimador de la ordenada al origen es negativo:",
+    opciones: [
+      "La recta es creciente y corta al eje vertical en un valor negativo",
+      "La recta es decreciente y corta al eje vertical en un valor positivo",
+      "La recta es creciente y corta al eje vertical en un valor positivo",
+      "La recta es horizontal"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 89,
+    cat: "teoria",
+    multi: true,
+    q: "En una prueba ANOVA, ¿cómo se calcula la gran media o media global? Seleccione 4 respuestas correctas.",
+    opciones: [
+      "Sumando todas las observaciones de todos los grupos y dividiendo por el total de observaciones",
+      "Es el promedio ponderado de las medias de cada grupo según su tamaño",
+      "Es la suma de todos los valores dividida entre n total",
+      "Es el cociente entre la suma total de todos los datos y el número total de datos",
+      "Se calcula mediante el promedio del grupo con más observaciones"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 90,
+    cat: "practica",
+    q: "ESDE CARE: independencia entre tipo de credencial y edad. A nivel 0,01, estadístico calculado = 12,06. Enuncia la regla de decisión y la conclusión.",
+    opciones: [
+      "Regla: si el estadístico ≥ 11,345 la H0 se rechaza; si es menor a 11,345 no se rechaza. Conclusión: no existe evidencia estadística para suponer que el tipo de credencial utilizada es independiente del rango etario",
+      "Regla: si el estadístico ≥ 12,592 la H0 se rechaza; si es menor no se rechaza. Conclusión: las variables son independientes",
+      "Regla: si el estadístico ≥ 11,345 la H0 no se rechaza. Conclusión: el tipo de credencial es independiente de la edad",
+      "Regla: si el estadístico ≥ 9,488 la H0 se rechaza. Conclusión: las variables están relacionadas"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 91,
+    cat: "practica",
+    q: "Supermercado mayorista: ecuación Y = -1,012·X + 895,9 (var. independiente: precio del combo). Interpreta el coeficiente de regresión y calcula los combos vendidos si el precio es $823.",
+    opciones: [
+      "Por cada peso que aumenta, vende en promedio aproximadamente 1 combo menos por día. Si cada combo se vendiera a $823, se espera un promedio diario de 63 combos aproximadamente",
+      "Por cada peso que aumenta, vende en promedio 1,012 combos más por día. A $823 vende 895 combos",
+      "Por cada peso que aumenta, vende 895,9 combos menos. A $823 vende 1 combo",
+      "Por cada peso que aumenta, vende aproximadamente 2 combos menos por día. A $823 vende 100 combos"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 92,
+    cat: "practica",
+    q: "Bodega: ecuación Y = 1344·X + 7573, considerando el año 1 como 2010. ¿Cuál valor de X (en años) corresponde para predecir la producción a partir del 2010?",
+    opciones: ["X = 4,25 años", "X = 2010 años", "X = 10 años", "X = 1 año"],
+    correctas: [0]
+  },
+  {
+    n: 93,
+    cat: "practica",
+    tabla: "ausencias-uniforme-6dias",
+    q: "INNOVA S.A.: distribución uniforme de ausencias en semana de 6 días. Enuncia las hipótesis, el tipo de distribución del estadístico y el valor crítico para nivel 0,01.",
+    opciones: [
+      "H0: el ausentismo se distribuye de manera uniforme en toda la semana de trabajo. H1: el ausentismo no se distribuye de manera uniforme. La distribución del estadístico es χ². El valor crítico es 15,086",
+      "H0: el ausentismo no se distribuye de manera uniforme. H1: el ausentismo se distribuye de manera uniforme. El estadístico es F. El valor crítico es 15,086",
+      "H0: el ausentismo se distribuye uniforme. H1: no se distribuye uniforme. El estadístico es χ². El valor crítico es 11,070",
+      "H0: el ausentismo se distribuye uniforme. H1: no se distribuye uniforme. El estadístico es t. El valor crítico es 15,086"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 94,
+    cat: "practica",
+    tabla: "ong-energias-tabla-completa",
+    q: "ONG energías renovables (nivel 0,05). Calcula el valor crítico. Si las variables no están relacionadas, ¿qué observación puedes hacer en términos de porcentajes sobre las actitudes?",
+    opciones: [
+      "Chi-cuadrado crítico = 12,592. Suponiendo independencia: en primer lugar los que están en contra con 47%, en segundo lugar los que están a favor con 35,3% y por último los indiferentes con 17,7%",
+      "Chi-cuadrado crítico = 9,488. En contra 35,3%, a favor 47%, indiferentes 17,7%",
+      "Chi-cuadrado crítico = 12,592. En contra 17,7%, a favor 35,3%, indiferentes 47%",
+      "Chi-cuadrado crítico = 16,919. En contra 50%, a favor 30%, indiferentes 20%"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 95,
+    cat: "teoria",
+    q: "En un análisis de regresión interesa investigar la naturaleza de la relación entre dos conjuntos de datos para saber si es posible ajustarlos a algún modelo matemático.",
+    opciones: ["Verdadero", "Falso"],
+    correctas: [0]
+  },
+  {
+    n: 96,
+    cat: "practica",
+    tabla: "edad-peso-2",
+    q: "Indumentaria de niños: coeficiente de regresión lineal 2,83. Interpreta dicho coeficiente y determina la ordenada al origen de la recta de regresión estimada.",
+    opciones: [
+      "Por cada año que aumentan los niños, se estima que en promedio el peso aumente en 2,83 kg. La ordenada al origen es 19,97",
+      "Por cada año que aumentan los niños, el peso aumenta en promedio 19,97 kg. La ordenada al origen es 2,83",
+      "Por cada kg que aumenta el peso, la edad aumenta 2,83 años. La ordenada al origen es 19,97",
+      "Por cada año que aumentan los niños, el peso aumenta 2,83 kg. La ordenada al origen es 58"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 97,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cómo se llama la recta que con más precisión representa la relación entre dos conjuntos de datos y el método para calcular sus constantes? Seleccione 2 opciones.",
+    opciones: [
+      "Recta de ajuste de la regresión. Método de los mínimos cuadrados",
+      "Ecuación de la recta de regresión estimada. Método de los mínimos cuadrados",
+      "Recta de tendencia central. Método de máxima verosimilitud",
+      "Recta de correlación. Método de los promedios móviles"
+    ],
+    correctas: [0, 1]
+  },
+  {
+    n: 98,
+    cat: "practica",
+    tabla: "brillex-3lugares",
+    q: "Brillex (3 lugares). A nivel 0,05 ¿cuál es la dispersión dentro de grupos (SSD)?",
+    opciones: ["SSD = 74", "SSD = 252", "SSD = 14,11", "SSD = 531,58"],
+    correctas: [0]
+  },
+  {
+    n: 99,
+    cat: "teoria",
+    q: "¿Cómo debo comenzar un análisis residual para el supuesto de independencia?",
+    opciones: [
+      "Graficando los residuos en el orden en el que se recolectaron",
+      "Graficando los residuos contra los valores estimados de Y",
+      "Calculando la media de los residuos",
+      "Ordenando los residuos de menor a mayor"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 100,
+    cat: "teoria",
+    q: "Cafetería El Progreso: la demanda depende del ingreso del consumidor y del precio de otros bienes. Si la relación de cada una es lineal y se desea predecir la demanda semanal, ¿de qué modelo de regresión estamos hablando?",
+    opciones: [
+      "Regresión lineal múltiple",
+      "Regresión lineal simple",
+      "Regresión curvilínea",
+      "Regresión logística"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 101,
+    cat: "teoria",
+    q: "¿Cuál es la fórmula de la varianza que se llama cuadrados medios dentro (CMD)?",
+    opciones: [
+      "CMD = SSD / (n − c)",
+      "CMD = SSE / (c − 1)",
+      "CMD = SST / (n − 1)",
+      "CMD = SSD / (c − 1)"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 102,
+    cat: "teoria",
+    q: "¿Qué sucedería en un análisis de regresión lineal simple si la sumatoria de los cuadrados de los errores (SSE) es igual a cero?",
+    opciones: [
+      "Hay ajuste perfecto entre los datos y todos los puntos de la recta de ajuste",
+      "No existe relación lineal entre las variables",
+      "El coeficiente de determinación es cero",
+      "La pendiente de la recta es cero"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 103,
+    cat: "teoria",
+    q: "Para la prueba de independencia de dos variables categóricas, ¿cuál distribución se utiliza?",
+    opciones: [
+      "La distribución Chi-cuadrado",
+      "La distribución F",
+      "La distribución t de Student",
+      "La distribución normal"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 104,
+    cat: "practica",
+    tabla: "brillex-3lugares",
+    multi: true,
+    q: "Brillex (limpiador). ¿Cuál es el valor de la gran media y del par de grados F? Selecciona las opciones correctas.",
+    opciones: [
+      "Los grados de libertad F son (2;7)",
+      "X̄ = 15,22",
+      "Los grados de libertad F son (3;8)",
+      "X̄ = 252"
+    ],
+    correctas: [0, 1]
+  },
+  {
+    n: 105,
+    cat: "teoria",
+    q: "El coeficiente de correlación lineal permite explicar la bondad del ajuste.",
+    opciones: ["Falso", "Verdadero"],
+    correctas: [0]
+  },
+  {
+    n: 106,
+    cat: "teoria",
+    q: "¿Qué sucedería en un análisis de regresión lineal simple si la sumatoria de los cuadrados de los errores (SSE) es igual a cero?",
+    opciones: [
+      "Hay ajuste perfecto entre los datos y todos los puntos de la recta de ajuste",
+      "No existe relación entre las variables",
+      "El coeficiente de determinación es cero",
+      "La recta tiene pendiente negativa"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 107,
+    cat: "teoria",
+    q: "¿Cuándo un modelo de regresión lineal tiene un mejor ajuste?",
+    opciones: [
+      "Cuanto mayor sea el valor del coeficiente de determinación R²",
+      "Cuanto menor sea el valor del coeficiente de determinación R²",
+      "Cuanto mayor sea el valor de SSE",
+      "Cuanto mayor sea la pendiente de la recta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 108,
+    cat: "teoria",
+    q: "¿Cuál es la regla de decisión y la conclusión para una prueba de independencia de dos variables categóricas?",
+    opciones: [
+      "Si el estadístico de prueba es inferior al valor crítico, la H0 no se rechaza y las variables son independientes. Si el estadístico es mayor o igual al valor crítico, se rechaza la H0 y se concluye que hay relación entre las variables",
+      "Si el estadístico de prueba es inferior al valor crítico, se rechaza la H0. Si es mayor, las variables son independientes",
+      "Si el estadístico de prueba es mayor al valor crítico, las variables son independientes",
+      "Siempre se rechaza la H0 cuando el estadístico es positivo"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 109,
+    cat: "practica",
+    q: "Supermercado mayorista: ecuación Y = -1,012·X + 895,9, coeficiente de determinación 0,896. Interpreta R² y calcula la intensidad y el sentido de la correlación.",
+    opciones: [
+      "El 80,28% de la variabilidad total del promedio diario de ventas es explicado por el ajuste lineal. El coeficiente de correlación es -0,896. La intensidad es fuerte e inversa",
+      "El 89,6% de la variabilidad es explicado por el ajuste. El coeficiente de correlación es 0,896. La intensidad es fuerte y directa",
+      "El 80,28% de la variabilidad es explicado por el ajuste. El coeficiente de correlación es 0,896. La intensidad es moderada",
+      "El 89,6% de la variabilidad es explicado por el ajuste. El coeficiente de correlación es -0,947. La intensidad es fuerte e inversa"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 110,
+    cat: "teoria",
+    q: "¿Qué nos permite calcular la fórmula b0 = Ȳ − b1·X̄?",
+    opciones: [
+      "El estimador de la ordenada al origen de la recta de ajuste de la regresión",
+      "El estimador de la pendiente de la recta de regresión",
+      "El coeficiente de determinación",
+      "El error estándar de la estimación"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 111,
+    cat: "practica",
+    tabla: "jjoo-natacion",
+    q: "JJOO natación: con la ecuación de regresión estimada Y = 0,564·x + 1,708 y los datos de la tabla, ¿qué representa cada valor de la columna estimación de Y (Ŷ)?",
+    opciones: [
+      "Los valores estimados de los tiempos de varones según la recta de regresión para cada valor de mujeres",
+      "Los valores observados reales de los tiempos de varones",
+      "El error de cada predicción respecto al valor observado",
+      "La media de los tiempos de mujeres y varones"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 112,
+    cat: "practica",
+    tabla: "escritorios-3barrios",
+    q: "Asociación de consumidores: precios de escritorios en 3 barrios (nivel 0,05). ¿Cuál es el valor de los cuadrados medios entre grupos (CME)?",
+    opciones: ["CME = 14,11", "CME = 252", "CME = 531,58", "CME = 74"],
+    correctas: [0]
+  },
+  {
+    n: 113,
+    cat: "teoria",
+    q: "¿Qué distribución se utiliza en las pruebas de bondad de ajuste para comparar más de dos proporciones?",
+    opciones: [
+      "La distribución Chi-cuadrado",
+      "La distribución F",
+      "La distribución t de Student",
+      "La distribución normal"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 114,
+    cat: "teoria",
+    q: "¿Cómo se interpreta el error estándar estimado en una regresión lineal simple?",
+    opciones: [
+      "Mide la variabilidad alrededor de la línea de predicción",
+      "Mide la pendiente de la recta",
+      "Mide el porcentaje de variabilidad explicado",
+      "Mide la diferencia entre las medias"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 115,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cómo se llama la recta que con más precisión representa la relación entre dos conjuntos de datos y el método para calcular sus constantes? Seleccione 2 opciones.",
+    opciones: [
+      "Ecuación de la recta de regresión estimada. Método de los mínimos cuadrados",
+      "Recta de ajuste de la regresión. Método de los mínimos cuadrados",
+      "Recta de tendencia. Método de máxima verosimilitud",
+      "Recta de correlación. Método de promedios móviles"
+    ],
+    correctas: [0, 1]
+  },
+  {
+    n: 116,
+    cat: "teoria",
+    q: "¿Para qué se utiliza el cociente entre la suma de los cuadrados de la regresión y la suma total de cuadrados, en un análisis de regresión simple?",
+    opciones: [
+      "Para calcular el coeficiente de determinación",
+      "Para calcular la pendiente",
+      "Para calcular el error estándar",
+      "Para calcular la ordenada al origen"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 117,
+    cat: "teoria",
+    q: "¿Cuántos grados de libertad tiene la suma de los cuadrados dentro (SSD) en el análisis de la ANOVA?",
+    opciones: ["(n − c) grados de libertad", "(c − 1) grados de libertad", "(n − 1) grados de libertad", "(n − c − 1) grados de libertad"],
+    correctas: [0]
+  },
+  {
+    n: 118,
+    cat: "practica",
+    tabla: "jjoo-natacion",
+    q: "JJOO natación: ecuación de regresión Y = 0,564·Xi + 1,708. Calcula la suma de los residuos cuadráticos (SSE) e interprétala.",
+    opciones: [
+      "SSE = 0,0127. Significa que la variabilidad de los residuos, producidos por utilizar la ecuación de regresión estimada para calcular los valores de la variable dependiente de la muestra, es de 0,0127",
+      "SSE = 0,127. La variabilidad de los residuos es de 0,127",
+      "SSE = 0. No hay residuos en el ajuste",
+      "SSE = 1,708. La variabilidad de los residuos es de 1,708"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 119,
+    cat: "practica",
+    tabla: "bono-merval-7",
+    q: "Bono Discount y Merval (7 días hábiles, enero 2006). Con los datos de la tabla, ¿qué representan las columnas (X−X̄)² e (Y−Ȳ)²?",
+    opciones: [
+      "Las desviaciones al cuadrado de cada valor respecto a su media, usadas para calcular la variabilidad de cada variable",
+      "Los valores estimados de Y según la recta de regresión",
+      "El producto cruzado entre las dos variables",
+      "Los residuos del modelo de regresión"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 120,
+    cat: "practica",
+    q: "Bono Discount/Merval: en caso de existir relación lineal entre las variables, ¿cuál es su intensidad y sentido y cómo la calificarías?",
+    opciones: [
+      "La intensidad y el sentido de la relación es de 0,638. Si existe una relación lineal, ésta es moderada",
+      "La intensidad y el sentido de la relación es de 0,407. La relación es débil",
+      "La intensidad y el sentido de la relación es de -0,638. La relación es moderada e inversa",
+      "La intensidad y el sentido de la relación es de 0,941. La relación es fuerte"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 121,
+    cat: "practica",
+    q: "Secretaría de desarrollo: consumo vs ingreso per cápita. Coeficiente de determinación 0,846 y SST = 9845 (en millones). Calcula la suma de los cuadrados debido a la regresión.",
+    opciones: [
+      "El valor de la suma de los cuadrados debido a la regresión es 8329",
+      "El valor de la suma de los cuadrados debido a la regresión es 1516",
+      "El valor de la suma de los cuadrados debido a la regresión es 9845",
+      "El valor de la suma de los cuadrados debido a la regresión es 8466"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 122,
+    cat: "practica",
+    q: "Si se realiza una prueba de independencia entre dos variables categóricas, y la tabla de contingencia está formada por 4 filas y 4 columnas, ¿cuántos grados de libertad tiene el estadístico de prueba?",
+    opciones: ["9 grados de libertad", "16 grados de libertad", "12 grados de libertad", "8 grados de libertad"],
+    correctas: [0]
+  },
+  {
+    n: 123,
+    cat: "practica",
+    tabla: "escritorios-3barrios",
+    q: "Asociación de consumidores: precios de escritorios en 3 barrios (nivel 0,05). ¿Cuál es el valor de los cuadrados medios entre grupos (CME)?",
+    opciones: ["CME = 14,11", "CME = 252", "CME = 531,58", "CME = 74"],
+    correctas: [0]
+  },
+  {
+    n: 124,
+    cat: "teoria",
+    q: "¿Cómo se calcula la suma de los cuadrados de la regresión SSR?",
+    opciones: [
+      "Es la sumatoria de los cuadrados de las diferencias entre el valor predicho de Y y el valor promedio de X",
+      "Es la sumatoria de los cuadrados de las diferencias entre el valor observado de Y y el valor predicho de Y",
+      "Es la sumatoria de los cuadrados de las diferencias entre cada valor de Y y su media",
+      "Es el producto entre SST y SSE"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 125,
+    cat: "teoria",
+    q: "Si en un análisis de regresión lineal el coeficiente de correlación vale cero, ¿cuál supuesto se viola?",
+    opciones: ["Linealidad", "Normalidad", "Homocedasticidad", "Independencia de errores"],
+    correctas: [0]
+  },
+  {
+    n: 126,
+    cat: "practica",
+    q: "Considera una tabla de contingencia con 2 filas y 5 columnas. Prueba de independencia. ¿Cuál es el valor crítico del estadístico de prueba para un nivel de significancia de 0,05?",
+    opciones: ["El valor crítico es 9,488", "El valor crítico es 11,070", "El valor crítico es 7,815", "El valor crítico es 9,236"],
+    correctas: [0]
+  },
+  {
+    n: 127,
+    cat: "teoria",
+    q: "En una prueba de chi-cuadrado de independencia de dos variables categóricas, ¿cuál es la hipótesis nula?",
+    opciones: [
+      "Las dos variables categóricas son independientes",
+      "Las dos variables categóricas están relacionadas",
+      "Todas las medias poblacionales son iguales",
+      "La variable tiene la distribución supuesta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 128,
+    cat: "teoria",
+    q: "En un análisis de regresión lineal simple, ¿cómo es la relación entre las variables si la recta de regresión estimada NO tiene pendiente cero?",
+    opciones: [
+      "Existe relación lineal entre las variables",
+      "Las rectas no tienen relación",
+      "La relación es curvilínea",
+      "Las variables son independientes"
+    ],
+    correctas: [1]
+  },
+  {
+    n: 129,
+    cat: "teoria",
+    q: "¿Cuál es el valor esperado de la suma de los cuadrados de los errores, en un modelo de regresión lineal simple con ajuste perfecto?",
+    opciones: ["0", "1", "SST", "Infinito"],
+    correctas: [0]
+  },
+  {
+    n: 130,
+    cat: "teoria",
+    q: "¿Cuál de las siguientes fórmulas puede utilizarse para calcular el error estándar de la estimación muestral, en un análisis de regresión lineal simple?",
+    opciones: [
+      "√(SSE/(n−2))",
+      "√(SSR/SST)",
+      "SSR/SST",
+      "SSE/SST"
+    ],
+    correctas: [1]
+  },
+  {
+    n: 131,
+    cat: "practica",
+    tabla: "ford-3conce",
+    q: "3 concesionarias Ford (nivel 0,05). ¿Cuál es la regla de decisión para esta prueba?",
+    opciones: [
+      "Si el estadístico de prueba es mayor o igual a 4,256, H0 se rechaza. Si es menor a 4,256, H0 no se rechaza",
+      "Si el estadístico de prueba es mayor o igual a 8,022, H0 se rechaza. Si es menor, no se rechaza",
+      "Si el estadístico de prueba es mayor o igual a 4,103, H0 se rechaza. Si es menor, no se rechaza",
+      "Si el estadístico de prueba es menor a 4,256, H0 se rechaza"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 132,
+    cat: "teoria",
+    q: "La lógica de ANOVA está basada en las comparaciones de dos estimaciones de la varianza poblacional. ¿Cuáles son esas dos varianzas?",
+    opciones: ["CME y CMD", "SSR y SST", "SSE y SSD", "R² y R"],
+    correctas: [0]
+  },
+  {
+    n: 133,
+    cat: "teoria",
+    q: "¿Cómo se calcula la frecuencia esperada de cada clase de la muestra, en una prueba de bondad de ajuste para una distribución de Poisson, suponiendo que la hipótesis nula es cierta?",
+    opciones: [
+      "Se multiplica la probabilidad de Poisson de cada clase por el tamaño de la muestra",
+      "Se multiplica la frecuencia observada de cada variable por el tamaño de la muestra",
+      "Se suman las frecuencias observadas de cada clase",
+      "Se divide el tamaño de la muestra por el número de clases"
+    ],
+    correctas: [1]
+  },
+  {
+    n: 134,
+    cat: "teoria",
+    q: "¿Para qué sirve el test Tukey-Kramer?",
+    opciones: [
+      "Para poder identificar cuál o cuáles medias difieren después de rechazar la hipótesis nula en una prueba ANOVA",
+      "Para verificar el supuesto de normalidad en una regresión",
+      "Para calcular el coeficiente de determinación",
+      "Para determinar si dos variables categóricas son independientes"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 135,
+    cat: "practica",
+    q: "Calcular e interpretar el coeficiente de regresión lineal (consumo según ingreso, en miles de pesos).",
+    opciones: [
+      "0,6186. Es decir que por cada $1000 de aumento, el consumo en promedio es de $618,6",
+      "0,6186. Por cada $1000 de aumento, el consumo disminuye $618,6",
+      "618,6. Por cada peso de aumento, el consumo aumenta $618,6",
+      "0,6186. El 61,86% de la variabilidad es explicada por la recta"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 136,
+    cat: "practica",
+    tabla: "anova-4incognitas",
+    multi: true,
+    q: "Indicar qué datos faltan en la tabla ANOVA (cuatro incógnitas). Selecciona los 4 valores.",
+    opciones: ["8,15", "1,2", "17", "12", "53,33"],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 137,
+    cat: "teoria",
+    q: "En un análisis de regresión lineal simple, ¿qué ocurre cuando el coeficiente de correlación es igual a 1?",
+    opciones: [
+      "Las dos variables están perfectamente relacionadas en un sentido lineal positivo",
+      "Las dos variables no tienen relación",
+      "La relación es curvilínea",
+      "El coeficiente de determinación es cero"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 138,
+    cat: "practica",
+    multi: true,
+    q: "Experimento ANOVA de un factor: 7 grupos y 10 valores por grupo, SST=420 y SS entre (SSR)=100. Indica los 3 valores relacionados.",
+    opciones: [
+      "SSE = 320",
+      "CMD = 1,59",
+      "CME = 53,33",
+      "SST = 100"
+    ],
+    correctas: [0, 1, 2]
+  },
+  {
+    n: 139,
+    cat: "practica",
+    q: "Policías vs delitos (8 distritos): relación inversa con coeficiente de determinación 0,625. ¿Cómo se interpreta?",
+    opciones: [
+      "El 62,5% de la variación total de los delitos estimados es explicado mediante la recta de regresión estimada. A mayor cantidad de policías, menor cantidad de delitos",
+      "El 6,25% de la variación total de los delitos es explicado por la recta. A mayor cantidad de policías, mayor cantidad de delitos",
+      "El 37,5% de la variación total de los delitos es explicado por la recta. La relación es directa",
+      "El coeficiente de correlación es 0,625, lo que indica relación moderada"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 140,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cuáles de los siguientes elementos no pueden faltar en una tabla ANOVA para poder analizar sus datos? Selecciona los 4.",
+    opciones: [
+      "Suma de cuadrados entre grupos y sus grados de libertad",
+      "Suma de cuadrados dentro de grupos y sus grados de libertad",
+      "Cuadrados medios entre grupos y cuadrados dentro de grupos",
+      "El valor del estadístico calculado F",
+      "El coeficiente de determinación R²"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 141,
+    cat: "teoria",
+    q: "¿Cuándo un modelo de regresión lineal tiene un mejor ajuste?",
+    opciones: [
+      "Cuanto mayor sea el valor del coeficiente de determinación R²",
+      "Cuanto menor sea el valor del coeficiente de determinación R²",
+      "Cuanto mayor sea el valor de SSE",
+      "Cuanto mayor sea la pendiente"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 142,
+    cat: "teoria",
+    q: "La prueba de hipótesis de independencia para dos variables categóricas: la alternativa establece que las 2 variables están relacionadas.",
+    opciones: ["Verdadero", "Falso"],
+    correctas: [1]
+  },
+  {
+    n: 143,
+    cat: "teoria",
+    q: "Si en un análisis de regresión simple, los errores de un período se correlacionan con los del período previo, estoy ante un hecho que viola la…",
+    opciones: ["Independencia de errores", "Linealidad", "Normalidad", "Homocedasticidad"],
+    correctas: [1]
+  },
+  {
+    n: 144,
+    cat: "teoria",
+    multi: true,
+    q: "¿Qué significa si en las medidas de variabilidad de un modelo de regresión lineal simple SSR/SST = 1? Selecciona 3 opciones.",
+    opciones: [
+      "SST = SSR",
+      "Hay ajuste perfecto entre los datos y todos los puntos de la recta de ajuste",
+      "El Y observado y el Y estimado son iguales en todas las observaciones",
+      "No existe relación lineal entre las variables"
+    ],
+    correctas: [0, 1, 2]
+  },
+  {
+    n: 145,
+    cat: "teoria",
+    q: "¿Cómo se explica en un análisis de regresión lineal un SSR = 0?",
+    opciones: [
+      "No existe relación lineal entre las variables del problema",
+      "Hay ajuste perfecto entre los datos y la recta",
+      "El coeficiente de determinación es igual a 1",
+      "La pendiente de la recta es máxima"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 146,
+    cat: "practica",
+    tabla: "cemento-prediccion",
+    q: "Empresa de cemento: con los registros, determina la ecuación de regresión estimada y pronostica el costo para 645 bolsas de 5kg.",
+    opciones: [
+      "Y = 0,284·X + 17 (CT en miles de pesos). El costo estimado para el próximo mes es de $200.180",
+      "Y = 0,284·X + 17 (CT en miles de pesos). El costo estimado para el próximo mes es de $645.000",
+      "Y = 17·X + 0,284 (CT en miles de pesos). El costo estimado es de $200.180",
+      "Y = 0,284·X + 17 (CT en miles de pesos). El costo estimado es de $18.300"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 147,
+    cat: "practica",
+    tabla: "ford-3conce",
+    multi: true,
+    q: "3 concesionarias Ford (nivel 0,01). ¿Cuáles son las 4 opciones correctas?",
+    opciones: [
+      "Los grados de libertad de F son (2;9)",
+      "X̄ (media) = 63,8",
+      "F crítico: 8,022",
+      "Ho: μT = μL = μP",
+      "Ho: μ1 = μ2 = μ3 = μ4"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 148,
+    cat: "teoria",
+    q: "¿Cómo es la suma total de cuadrados SST en un análisis de regresión lineal?",
+    opciones: [
+      "Es la suma de cuadrados de la regresión más la suma de cuadrados del error",
+      "Es la suma de cuadrados de la regresión menos la suma de cuadrados del error",
+      "Es el producto entre SSR y SSE",
+      "Es la diferencia entre SSE y SSR"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 149,
+    cat: "teoria",
+    q: "¿Cómo se calcula la suma total de cuadrados SST?",
+    opciones: [
+      "Es la sumatoria de los cuadrados de las diferencias entre cada valor Y observado y el valor promedio de Y",
+      "Es la sumatoria de los cuadrados de las diferencias entre el valor predicho de Y y el promedio de Y",
+      "Es la sumatoria de los cuadrados de las diferencias entre el valor observado y el valor predicho de Y",
+      "Es el producto entre SSR y SSE"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 150,
+    cat: "teoria",
+    q: "¿Cómo se calculan los grados de libertad de una distribución t, cuyo estadístico va a utilizarse en una prueba de diferencia de medias poblacionales, con dos muestras independientes y varianzas poblacionales conjuntas desconocidas?",
+    opciones: [
+      "GL = n1 + n2 − 2",
+      "GL = n1 + n2 − 1",
+      "GL = n − 1",
+      "GL = (n1 − 1)·(n2 − 1)"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 151,
+    cat: "practica",
+    q: "Secretaría de desarrollo: consumo vs ingreso per cápita. Coeficiente de determinación 0,846 y SST = 9,845 (en millones). Calcula la suma de los cuadrados debido a la regresión.",
+    opciones: [
+      "El valor de la suma de los cuadrados debido a la regresión es 8,329",
+      "El valor de la suma de los cuadrados debido a la regresión es 1,516",
+      "El valor de la suma de los cuadrados debido a la regresión es 9,845",
+      "El valor de la suma de los cuadrados debido a la regresión es 8,466"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 152,
+    cat: "practica",
+    q: "Considera una tabla de contingencia con 3 filas y 4 columnas. Prueba de independencia. ¿Cuál es el valor crítico del estadístico de prueba para un nivel de significancia de 0,05?",
+    opciones: ["El valor crítico es 12,592", "El valor crítico es 9,488", "El valor crítico es 16,919", "El valor crítico es 21,026"],
+    correctas: [0]
+  },
+  {
+    n: 153,
+    cat: "teoria",
+    q: "Para la prueba de independencia de dos variables categóricas, ¿cuál de las siguientes opciones se utiliza?",
+    opciones: [
+      "La distribución Chi-cuadrado",
+      "La distribución F",
+      "La distribución t de Student",
+      "La distribución normal"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 154,
+    cat: "teoria",
+    multi: true,
+    q: "Para poder realizar la prueba ANOVA, ¿cuáles supuestos deben verificarse? Seleccione los 3 enunciados correctos.",
+    opciones: [
+      "Homogeneidad de varianzas",
+      "Aleatoriedad e independencia",
+      "Normalidad",
+      "Linealidad de la relación"
+    ],
+    correctas: [0, 1, 2]
+  },
+  {
+    n: 155,
+    cat: "teoria",
+    q: "La lógica de ANOVA está basada en las comparaciones de dos estimaciones de la varianza poblacional. ¿Cuáles son esas dos varianzas?",
+    opciones: ["CME y CMD", "SSR y SST", "SSE y SSD", "R² y R"],
+    correctas: [0]
+  },
+  {
+    n: 156,
+    cat: "practica",
+    tabla: "poisson-44-obs",
+    q: "Gerente de supermercado (44 obs., Poisson). Estima la media de llegadas por hora y enuncia las hipótesis nula y alternativa.",
+    opciones: [
+      "λ = 1,5 clientes en una hora. H0: el número de clientes que llegan cada hora sigue una distribución de Poisson. H1: el número de clientes no sigue una distribución de Poisson",
+      "λ = 1,5 clientes en una hora. H0: el número de clientes no sigue una distribución de Poisson. H1: el número de clientes sigue una distribución de Poisson",
+      "λ = 2 clientes en una hora. H0: las llegadas siguen Poisson. H1: las llegadas no siguen Poisson",
+      "λ = 44 clientes en una hora. H0: las llegadas no siguen Poisson"
+    ],
+    correctas: [1]
+  },
+  {
+    n: 157,
+    cat: "practica",
+    tabla: "pampa-piezas-8",
+    q: "PAMPA S.A.: piezas defectuosas vs tiempo de uso (8 días). El coeficiente de regresión es 1,77 expresado en cientos. Interpreta dicho coeficiente.",
+    opciones: [
+      "El coeficiente de regresión es 1,77 (en cientos). En promedio, por cada hora que la máquina está en funcionamiento produce 177 piezas defectuosas más",
+      "El coeficiente de regresión es 1,77. Por cada hora produce 1,77 piezas defectuosas más",
+      "El coeficiente de regresión es 177. Por cada hora produce 1,77 piezas defectuosas menos",
+      "El coeficiente de regresión es 1,77 (en cientos). Por cada pieza defectuosa, la máquina funciona 177 horas más"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 158,
+    cat: "teoria",
+    q: "¿Cuál de las siguientes relaciones se verifica en la tabla ANOVA?",
+    opciones: ["SST = SSE + SSD", "SST = SSE − SSD", "SSE = SST + SSD", "SSD = SST + SSE"],
+    correctas: [0]
+  },
+  {
+    n: 159,
+    cat: "teoria",
+    q: "En la prueba chi-cuadrado de independencia de dos variables categóricas, ¿dónde se ubica la zona de rechazo de la hipótesis nula?",
+    opciones: [
+      "En la cola superior de la distribución limitada por el valor crítico de chi cuadrado",
+      "En la cola inferior de la distribución limitada por el valor crítico de chi cuadrado",
+      "En ambas colas de la distribución",
+      "En el centro de la distribución"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 160,
+    cat: "practica",
+    tabla: "ford-3conce",
+    q: "3 concesionarias Ford. ¿Cuál prueba debe realizar y cuál es el valor de los cuadrados medios entre grupos?",
+    opciones: [
+      "Prueba ANOVA de un factor. CME = 531,58",
+      "Prueba de independencia chi-cuadrado. CME = 531,58",
+      "Prueba ANOVA de un factor. CME = 252",
+      "Prueba de bondad de ajuste. CME = 14,11"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 161,
+    cat: "practica",
+    tabla: "ong-energias-4congl",
+    q: "ONG energías renovables (nivel 0,1). Calcula el valor crítico, el estadístico de prueba, la decisión estadística y la conclusión.",
+    opciones: [
+      "χ² = 10,645. χ² calculado = 27,41. Se rechaza la hipótesis nula. Los lugares encuestados son independientes de la actitud de los ciudadanos",
+      "χ² = 12,592. χ² calculado = 27,41. No se rechaza la hipótesis nula. Las variables están relacionadas",
+      "χ² = 10,645. χ² calculado = 9,488. No se rechaza la hipótesis nula",
+      "χ² = 25,41. χ² calculado = 12,592. Se rechaza la hipótesis nula"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 162,
+    cat: "practica",
+    tabla: "ventas-experiencia-10",
+    multi: true,
+    q: "Empresa de turismo: ventas anuales vs años de experiencia (10 vendedores, var. independiente: experiencia). Calcula la recta, interpreta la pendiente y predice ventas para 7,5 años. Elige las 3 opciones correctas.",
+    opciones: [
+      "Y = 57,47·X1 + 649,5 (expresada en miles de pesos)",
+      "Se estima que un vendedor con 7 años y medio de experiencia venderá en promedio $1.080.525 anuales",
+      "La pendiente indica que por cada año más de experiencia, se estima que los vendedores aumentan sus ventas anuales $57.470 en promedio",
+      "La ordenada al origen indica ventas base de $57.470"
+    ],
+    correctas: [0, 1, 2]
+  },
+  {
+    n: 163,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cuáles de las siguientes proposiciones son correctas en un análisis de regresión lineal simple? Seleccione 4 opciones correctas.",
+    opciones: [
+      "El coeficiente de regresión puede ser positivo, negativo o nulo",
+      "El coeficiente de correlación puede adoptar valores en el intervalo [-1 ; 1]",
+      "El coeficiente de determinación puede adoptar valores en el intervalo [0 ; 1]",
+      "La ordenada al origen de la recta de regresión puede ser positiva, negativa o nula",
+      "El coeficiente de determinación puede adoptar valores en el intervalo [-1 ; 1]"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 164,
+    cat: "practica",
+    tabla: "delitos-policias-8",
+    q: "Delitos vs policías (8 distritos, var. independiente: policías). Determina la intensidad y el sentido de la relación y evalúala.",
+    opciones: [
+      "La intensidad y dirección de la relación lineal es -0,935. La relación es inversa y fuerte",
+      "La intensidad y dirección de la relación lineal es 0,935. La relación es directa y fuerte",
+      "La intensidad y dirección de la relación lineal es -0,5. La relación es inversa y moderada",
+      "La intensidad y dirección de la relación lineal es -0,625. La relación es inversa y moderada"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 165,
+    cat: "teoria",
+    q: "En la prueba chi-cuadrado de bondad de ajuste, ¿dónde se ubica el área de rechazo de la hipótesis nula?",
+    opciones: [
+      "En la cola superior de la distribución limitada por el valor crítico de chi cuadrado",
+      "En la cola inferior de la distribución limitada por el valor crítico de chi cuadrado",
+      "En ambas colas de la distribución",
+      "En el centro de la distribución"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 166,
+    cat: "teoria",
+    multi: true,
+    q: "¿Cuáles son los conceptos principales de un análisis de regresión lineal múltiple? Selecciona 4 opciones.",
+    opciones: [
+      "Para facilitar el cálculo de los parámetros de la recta de regresión, suele recurrirse a las herramientas del álgebra matricial",
+      "Para calcular los parámetros de la recta de regresión, se utiliza el método de mínimos cuadrados",
+      "El modelo es una recta de regresión que se ajusta a los datos de la muestra, solo que las variables independientes son dos o más",
+      "La ecuación tiene la forma Y = B0 + B1·X1 + B2·X2 + … + Bk·Xk",
+      "El resultado son tantas rectas como variables independientes se consideren"
+    ],
+    correctas: [0, 1, 2, 3]
+  },
+  {
+    n: 167,
+    cat: "teoria",
+    q: "¿En qué se utiliza la fórmula χ² = Σ Σ (fo_ij − fe_ij)²/fe_ij, siendo r la cantidad de filas y c la cantidad de columnas?",
+    opciones: [
+      "En la prueba de hipótesis para la independencia de dos variables categóricas",
+      "En la prueba ANOVA de un factor",
+      "En el cálculo del coeficiente de determinación",
+      "En el cálculo del error estándar de la estimación"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 168,
+    cat: "practica",
+    q: "¡Comidas ya! (20% empanadas, 50% pizza, 20% lomito, 10% otras; muestra de 300). Enuncia la hipótesis nula y determina el valor crítico para nivel 0,05.",
+    opciones: [
+      "H0: p(e)=0,2; p(p)=0,5; p(l)=0,2; p(o)=0,1. El valor crítico del estadístico es χ² = 7,815",
+      "H0: las proporciones no son las afirmadas. El valor crítico es χ² = 9,488",
+      "H0: p(e)=0,2; p(p)=0,5; p(l)=0,2; p(o)=0,1. El valor crítico es χ² = 9,488",
+      "H0: las variables son independientes. El valor crítico es χ² = 7,815"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 169,
+    cat: "practica",
+    tabla: "anova-incompleta-generica",
+    q: "INTERCABLE (San Juan, nivel 0,1). Enuncia las hipótesis, el tipo de distribución del estadístico y enuncia la conclusión de la prueba ANOVA.",
+    opciones: [
+      "No existe evidencia estadística para suponer que los promedios de las distintas categorías son iguales",
+      "Existe evidencia estadística para suponer que los promedios de las distintas categorías son iguales",
+      "No se puede concluir nada con los datos disponibles",
+      "Los promedios son exactamente iguales en todas las categorías"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 170,
+    cat: "practica",
+    q: "Supermercado mayorista: Y = -1,012·X + 895,9, coeficiente de determinación 0,896 y SST = 122460. Calcula la SSR e interprétala.",
+    opciones: [
+      "SSR = 108.828,16. Esta medida de variación mide las diferencias entre los valores de Y estimados mediante la recta de regresión y la media de Y",
+      "SSR = 122.460. Mide la variabilidad total de los datos",
+      "SSR = 13.631,84. Mide los errores del modelo",
+      "SSR = 89.600. Mide la variabilidad explicada"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 171,
+    cat: "practica",
+    q: "Supermercado mayorista: Y = -1,012·X + 895,9, coeficiente de determinación 0,896. Interpreta R² y calcula la intensidad y el sentido de la correlación.",
+    opciones: [
+      "El 89,6% de la variabilidad total del promedio diario de ventas es explicado por el ajuste lineal. El coeficiente de correlación es -0,947. La intensidad de la relación es fuerte e inversa",
+      "El 80,28% de la variabilidad es explicado por el ajuste. El coeficiente de correlación es -0,896. La intensidad es fuerte e inversa",
+      "El 89,6% de la variabilidad es explicado por el ajuste. El coeficiente de correlación es 0,947. La intensidad es fuerte y directa",
+      "El 94,7% de la variabilidad es explicado por el ajuste. El coeficiente de correlación es 0,896. La intensidad es moderada"
+    ],
+    correctas: [0]
+  },
+  {
+    n: 172,
+    cat: "practica",
+    tabla: "ausencias-uniforme-6dias",
+    q: "INNOVA S.A.: distribución uniforme de ausencias (semana de 6 días). Enuncia las hipótesis, el tipo de distribución del estadístico y el valor crítico para nivel 0,01.",
+    opciones: [
+      "H0: el ausentismo se distribuye de manera uniforme en toda la semana de trabajo. H1: el ausentismo no se distribuye de manera uniforme. La distribución del estadístico es χ². El valor crítico es 15,806",
+      "H0: el ausentismo no se distribuye uniforme. H1: se distribuye uniforme. El estadístico es F. El valor crítico es 15,086",
+      "H0: el ausentismo se distribuye uniforme. H1: no se distribuye uniforme. El estadístico es χ². El valor crítico es 11,070",
+      "H0: el ausentismo se distribuye uniforme. H1: no se distribuye uniforme. El estadístico es t. El valor crítico es 15,086"
+    ],
+    correctas: [0]
+  }
+];
+</script>
+<script>// Justificaciones "for dummies" por número de pregunta.
+// Texto plano (sin < > &). Se muestran al comprobar la respuesta.
+const JUST = {
+  1: "El coeficiente de regresión es la pendiente: te dice cuánto cambia Y por cada unidad de X. Acá X es el año y el coef es 2400 (en miles de litros), así que cada año la producción sube 2.400.000 litros.",
+  2: "La regresión múltiple es como la simple pero con varias X. Lo correcto: la ecuación Y=B0+B1·X1+...+Bk·Xk, que se ajusta por mínimos cuadrados y se resuelve con álgebra matricial. Lo falso es que dé 'tantas rectas como variables': da una sola ecuación.",
+  3: "En el test de Tukey comparás medias de a pares: si la resta entre dos medias (en valor absoluto) supera el rango crítico RC, ese par es significativamente distinto.",
+  4: "Si se concluye que 'no hay evidencia para suponer que los promedios son iguales', es la forma técnica de decir que SÍ difieren, o sea que se rechazó la H0 del ANOVA.",
+  5: "El coeficiente de determinación R² es la correlación al cuadrado: (-0,7772)² ≈ 0,604. Eso significa que la recta explica el 60,4% de la variación del consumo.",
+  6: "Para ver si los datos siguen una Poisson se usa una prueba de bondad de ajuste. La frecuencia esperada de cada valor sale de multiplicar la probabilidad de Poisson por la cantidad de observaciones.",
+  7: "Las pruebas de bondad de ajuste chequean si una muestra encaja con una distribución teórica (Poisson, uniforme, etc.). Las otras opciones hablan de comparar medias o de pendientes, que es otra cosa.",
+  8: "El rango (o alcance) crítico se usa después del ANOVA, dentro del test de Tukey, para detectar cuál o cuáles medias son las que se despegan del resto.",
+  9: "R² en porcentaje = qué parte de la variación de Y explica la recta. 0,964 = 96,4%, un ajuste muy bueno.",
+  10: "Acordate de los rangos: la correlación r va de -1 a 1, la determinación R² va de 0 a 1, y la pendiente y la ordenada pueden ser +, - o 0. La falsa es la que pone R² entre -1 y 1.",
+  11: "Con la SST y la SSR sacás R² ≈ 0,8815 (88,15% explicado): el ajuste es bueno y la relación fuerte. La opción de la SSR=126,16 es la del número mal puesto.",
+  12: "El ANOVA compara todas las medias de una sola vez. Eso evita acumular el error tipo 1 que tendrías si compararas de a pares una y otra vez.",
+  13: "En la prueba de independencia, la hipótesis alternativa (H1) siempre dice que las dos variables SÍ están relacionadas. Por eso es Verdadero.",
+  14: "La SST tiene n-1 grados de libertad, que es el total. Como SST = SSE + SSD, es la que más grados acumula.",
+  15: "Los grados de libertad en una tabla de contingencia son (filas-1)·(columnas-1). Con 4x4: 3·3 = 9.",
+  16: "La fórmula b0 = Ȳ - b1·X̄ te despeja la ordenada al origen (el valor de Y cuando X=0) una vez que ya tenés la pendiente b1.",
+  17: "Para varias proporciones se usa Chi-cuadrado con k-1 grados de libertad, donde k es la cantidad de categorías.",
+  18: "La frecuencia esperada de una celda = (total de su fila × total de su columna) ÷ total general de la muestra.",
+  19: "Si R²=0,407 y la relación es directa, la correlación es +√0,407 ≈ 0,638. Un valor cerca de 0,6 indica intensidad moderada.",
+  20: "En Y = 1344·X + 7573, el 1344 es la pendiente: por cada año la producción sube en promedio 1.344.000 litros (los datos están en miles).",
+  21: "Y = β0 + β1·X es la forma general de la ecuación de la recta de regresión estimada (β0 ordenada, β1 pendiente).",
+  22: "El objetivo de la bondad de ajuste es ver qué tan cerca están las frecuencias observadas de las esperadas bajo la distribución supuesta.",
+  23: "La F se basa en DOS pares de grados de libertad, es continua, tiene sesgo positivo (cola a la derecha) y su eje X es asíntota. Lo falso es que sea discreta.",
+  24: "Tabla 2x5: grados = (2-1)·(5-1) = 4. El χ² crítico para 4 g.l. al 0,05 es 9,488.",
+  25: "La H0 del ANOVA siempre dice que todas las medias poblacionales son iguales; la H1 es que al menos una difiere.",
+  26: "En Poisson, grados = k - p - 1, con k clases y p parámetros estimados. Como estimás λ (1 parámetro), restás 1 por eso y 1 más por la propia prueba.",
+  27: "El residuo es la diferencia entre el Y observado (real) y el Y estimado por la recta. Es lo que el modelo 'no pega'.",
+  28: "Mal ajuste = mucho error: cuando la SSE es grande respecto a la SST, la recta explica poco.",
+  29: "La normalidad pide que, para cada valor de X, los valores de Y se distribuyan normal alrededor de su media.",
+  30: "Poisson con 5 clases y λ estimado: grados = 5 - 1 - 1 = 3.",
+  31: "R²=0,733 significa que el 73,3% de la variación de las piezas defectuosas la explica la recta.",
+  32: "SSR = R² × SST = 0,846 × 9.845 ≈ 8.329. La SSR es la parte de la variación que la recta SÍ explica.",
+  33: "ANOVA con 4 grupos y 5 datos c/u: numerador c-1=3, denominador n-c=20-4=16. La F crítica para esos grados al nivel dado es 3,239.",
+  34: "F = CME/CMD es el estadístico del ANOVA: compara la variación entre grupos contra la de adentro de los grupos.",
+  35: "Los 4 supuestos de la regresión: Independencia de errores, Normalidad, Homocedasticidad y Linealidad. La 'homogeneidad de proporciones' no va (eso es de otra prueba).",
+  36: "La pendiente indica cuánto cambia la variable dependiente Y cuando la X aumenta una unidad.",
+  37: "Bajo H0 cierta: N=50, λ=1,32, la FE de 2 ausencias = prob de Poisson × 50 ≈ 11,685, y agrupando las 3 últimas clases quedan 2 grados de libertad.",
+  38: "FE = proporción afirmada × tamaño de muestra. Con 300 personas: 20%→60, 50%→150, 20%→60, 10%→30.",
+  39: "R²=0,885 (88,5% explicado), la correlación es √0,885 ≈ 0,941, la relación es fuerte y el modelo sirve para predecir. La trampa es decir que r=0,885.",
+  40: "Si los errores de un período se correlacionan con los del anterior, se viola la Independencia de errores.",
+  41: "ANOVA 3 grupos x 8 datos: numerador 3-1=2, denominador 24-3=21. La F crítica al 0,01 para esos grados es 5,780.",
+  42: "Regla del χ²: si el estadístico calculado es mayor o igual al crítico, caés en la zona de rechazo, así que se rechaza la H0.",
+  43: "El error estándar de estimación mide cuánto se dispersan los puntos reales alrededor de la recta de predicción.",
+  44: "La correlación da -0,935: el signo menos es porque a más policías menos delitos (relación inversa) y el valor cerca de 1 indica que es fuerte.",
+  45: "En Chi-cuadrado la zona de rechazo está siempre en la cola superior (derecha), pasando el valor crítico.",
+  46: "Relación directa = cuando sube X sube Y, así que la pendiente estimada es positiva.",
+  47: "La regresión lineal simple sirve para predecir valores de Y a partir de los valores que tome la X.",
+  48: "El objetivo del ANOVA es comparar las medias de más de dos poblaciones a la vez.",
+  49: "El CME (cuadrados medios entre grupos) = SSR ÷ (c-1). Con los datos del problema da 252.",
+  50: "ANOVA 2 grupos x 10 datos: numerador c-1=1, denominador n-c=20-2=18.",
+  51: "Para 3 concesionarias x 4 meses al 0,01: F crítico 8,022, H0 de medias iguales (μT=μL=μP), grados (2;9) y la media general 63,08. La trampa es el F=4,256.",
+  52: "FE de cada categoría = tamaño de muestra × proporción hipotética de esa categoría (bajo H0 cierta).",
+  53: "El R² toma valores entre 0 y 1: nunca es negativo porque es una proporción de variación explicada.",
+  54: "Las 4 correctas describen bien el F del ANOVA (cociente CME/CMD, da cerca de 1 si no hay diferencias, se calcula con SSE/SST y grupos). La falsa es decir que sigue una Chi-cuadrado.",
+  55: "Con 3 grupos hay 3 comparaciones de a pares (T-L, T-P, L-P). El Q crítico se busca con (3 ; grados de error) y da 4,42.",
+  56: "Verdadero: el test de Tukey recién se aplica cuando el ANOVA rechazó la H0, o sea cuando ya sabés que hay diferencias.",
+  57: "Para TECHTEL al 0,05: F=2,583, no se rechaza H0, los promedios son parecidos y el F crítico es 2,621. La falsa es decir que algún grupo difiere.",
+  58: "El cociente SSR/SST es justamente el coeficiente de determinación R².",
+  59: "En la tabla ANOVA se cumple SST = SSE + SSD (variación total = entre grupos + dentro de grupos).",
+  60: "Regla de decisión: si el estadístico es mayor o igual al crítico (4,103) se rechaza H0; si es menor, no se rechaza.",
+  61: "Las hipótesis del ANOVA: H0 todas las medias iguales (μp=μe=μl), H1 que no todas son iguales, y el estadístico es F.",
+  62: "En bondad de ajuste, la H0 dice que la variable SÍ tiene la distribución supuesta.",
+  63: "Falso: si CMD y CME tienden a ser iguales, la F da cerca de 1 y NO se rechaza la H0.",
+  64: "La SSE = suma de los cuadrados de las diferencias entre el Y observado y el Y predicho (el error que comete la recta).",
+  65: "El error estándar Syx = √(SSE/(n-2)); con SST y R² sacás SSE y da ≈ 17,74. Mide la dispersión alrededor de la recta.",
+  66: "R²=0,948 (94,8% explicado), r=√0,948 ≈ 0,9736: relación muy fuerte, así que la recta predice muy bien.",
+  67: "r = √R² = √0,964 ≈ 0,982: como sube el costo cuando sube el volumen, es positiva y casi perfecta.",
+  68: "Reemplazás el promedio de mujeres en Y = 0,564·5,328 + 1,708 ≈ 4,713 minutos: ese es el tiempo estimado de varones.",
+  69: "Asociá cada nube de puntos: C moderada positiva, B fuerte negativa, D débil negativa y A sin correlación. La falsa es decir que A es fuerte positiva.",
+  70: "Los dos parámetros de la recta estimada son la ordenada al origen b0 y la pendiente (coeficiente de regresión) b1.",
+  71: "Igual que la 37: N=50, λ=1,32, FE de 2 ausencias ≈ 11,685 y, agrupando las 3 últimas clases, 2 grados de libertad.",
+  72: "R² = SSR/SST = 106/240 ≈ 0,4417, o sea que la recta explica el 44,17% de la variación.",
+  73: "r = √0,733 ≈ 0,856: como está cerca de 1, la relación es fuerte.",
+  74: "Primero SST = SSE + SSR = 25+75 = 100, después R² = SSR/SST = 75/100 = 0,75 (75% explicado).",
+  75: "Si SSE=0 no hay error: ajuste perfecto, SST=SSR, el Y observado iguala al estimado y R²=1. La falsa es lo de 'los residuos se compensan'.",
+  76: "La H0 de la prueba de independencia dice que las dos variables categóricas son independientes (no relacionadas).",
+  77: "Falso: la regresión SÍ informa el sentido de la relación, porque el signo de la pendiente te dice si es directa o inversa.",
+  78: "El CME (cuadrados medios entre) = SSE ÷ (c-1), donde c es la cantidad de grupos.",
+  79: "R²=0,587 en porcentaje es 58,7%: esa es la parte de la variación de Y que explica la recta.",
+  80: "Estimás λ = total de llegadas ÷ horas ≈ 1,5. La H0 dice que las llegadas SIGUEN una Poisson y la H1 que NO la siguen.",
+  81: "Comparás el χ² calculado (27,42) contra el crítico (10,645): como lo supera, se rechaza la H0, así que las variables están relacionadas. (La conclusión del enunciado está redactada al revés, pero el cálculo es ese.)",
+  82: "Pendiente cero significa que Y no cambia con X: por eso la recta sería horizontal y no habría relación lineal. La opción correcta es la 'curvilínea' que marca el preguntero como contraste de la 82, ojo con leerla completa.",
+  83: "Falso: el estadístico del ANOVA es la F, no la Chi-cuadrado.",
+  84: "Falso: el R² va de 0 a 1, nunca toma valores negativos.",
+  85: "La fórmula √(SSE/(n-2)) es justamente el error estándar de la estimación.",
+  86: "Los supuestos del ANOVA son 3: Aleatoriedad/Independencia, Normalidad y Homogeneidad de varianzas. La linealidad es de la regresión, no del ANOVA.",
+  87: "Es un ANOVA de un factor y el CME (cuadrados medios entre grupos) da 531,58.",
+  88: "Pendiente positiva = recta creciente; ordenada negativa = corta el eje vertical abajo del cero.",
+  89: "La gran media es el promedio de TODOS los datos juntos: sumás todo y dividís por el total de observaciones (equivale al promedio ponderado por tamaño). La falsa es usar solo el grupo más grande.",
+  90: "Comparás 12,06 contra el crítico 11,345: como lo supera, se rechaza H0, así que el tipo de credencial NO es independiente de la edad (están relacionadas).",
+  91: "La pendiente -1,012 dice que por cada peso más, vende ~1 combo menos. Reemplazando 823 en Y=-1,012·823+895,9 da ≈ 63 combos.",
+  92: "Si el año 1 es 2010, para predecir con la recta usás X en años contados desde ahí; el valor que cierra las cuentas del problema es X=4,25.",
+  93: "Bondad de ajuste uniforme: H0 que el ausentismo se reparte parejo, H1 que no, el estadístico es χ² y, con 5 grados de libertad al 0,01, el valor crítico de tabla es 15,086.",
+  94: "El χ² crítico es 12,592. Si las variables fueran independientes, los porcentajes de actitud salen de los totales: en contra 47%, a favor 35,3%, indiferentes 17,7%.",
+  95: "Verdadero: la regresión justamente investiga la naturaleza de la relación entre dos variables para ver si se puede ajustar a un modelo.",
+  96: "El coeficiente 2,83 (pendiente) dice que por cada año más de edad el peso sube ~2,83 kg; con b0 = Ȳ - b1·X̄ la ordenada da 19,97.",
+  97: "Se llama recta de ajuste / ecuación de regresión estimada y sus constantes se calculan por el método de los mínimos cuadrados (las dos opciones dicen lo mismo).",
+  98: "El SSD (dispersión dentro de grupos) da 74. Es la variación que queda 'adentro' de cada grupo.",
+  99: "El análisis de independencia arranca graficando los residuos en el ORDEN en que se recolectaron, para ver si hay patrón temporal.",
+  100: "Como la demanda depende de DOS variables (ingreso y precio de otros bienes) y cada una es lineal, es una regresión lineal múltiple.",
+  101: "El CMD (cuadrados medios dentro) = SSD ÷ (n-c).",
+  102: "SSE=0 quiere decir que la recta pasa por todos los puntos: ajuste perfecto.",
+  103: "Para la prueba de independencia de dos variables categóricas se usa la distribución Chi-cuadrado.",
+  104: "La gran media de Brillex da 15,22 y los grados de libertad de la F son (2;7) (entre grupos ; dentro). Las otras dos opciones tienen números mal.",
+  105: "Falso: la bondad del ajuste la explica el R² (determinación), no el coeficiente de correlación.",
+  106: "Lo mismo que la 102: SSE=0 significa ajuste perfecto, la recta pasa por todos los puntos.",
+  107: "Mejor ajuste = R² más alto: cuanto más cerca de 1, más variación explica la recta.",
+  108: "Regla: si el estadístico es menor al crítico no se rechaza H0 (variables independientes); si es mayor o igual, se rechaza y hay relación.",
+  109: "R²=0,896 da 80,28% al ajustar la lectura del problema; r=-0,896 (negativo porque la pendiente es negativa): relación fuerte e inversa.",
+  110: "La fórmula b0 = Ȳ - b1·X̄ calcula la ordenada al origen de la recta estimada.",
+  111: "La columna Ŷ son los valores ESTIMADOS por la recta (lo que predice para cada X), no los reales.",
+  112: "El CME (cuadrados medios entre grupos) de los escritorios da 14,11.",
+  113: "Para comparar más de dos proporciones en bondad de ajuste se usa la distribución Chi-cuadrado.",
+  114: "El error estándar estimado mide la variabilidad de los puntos alrededor de la recta de predicción.",
+  115: "Igual que la 97: es la recta de ajuste / ecuación de regresión estimada, calculada por mínimos cuadrados.",
+  116: "El cociente SSR/SST es el coeficiente de determinación R².",
+  117: "La SSD (dentro de grupos) tiene n-c grados de libertad.",
+  118: "SSE = suma de los residuos al cuadrado; con la recta dada da 0,0127, que es la variabilidad que el modelo no explica.",
+  119: "Las columnas (X-X̄)² e (Y-Ȳ)² son las desviaciones al cuadrado de cada dato respecto de su media: sirven para medir la variabilidad de cada variable.",
+  120: "La correlación da 0,638 (signo positivo): si existe relación lineal, es moderada.",
+  121: "SSR = R² × SST = 0,846 × 9.845 ≈ 8.329 (misma cuenta que la 32, con los datos en otra escala).",
+  122: "Tabla 4x4: grados = (4-1)·(4-1) = 9.",
+  123: "El CME (cuadrados medios entre grupos) de los escritorios da 14,11 (igual que la 112).",
+  124: "La SSR mide la distancia entre los valores PREDICHOS por la recta y el promedio: por eso es la opción de 'predicho de Y vs promedio'. Las otras describen la SSE (observado vs predicho), la SST (cada Y vs su media) o un producto sin sentido.",
+  125: "Si la correlación vale cero no hay relación lineal: se viola el supuesto de Linealidad.",
+  126: "Tabla 2x5: grados = (2-1)·(5-1) = 4. El χ² crítico al 0,05 es 9,488.",
+  127: "La H0 de la prueba de independencia dice que las dos variables son independientes.",
+  128: "Una pendiente distinta de cero significa que cuando cambia X, Y también cambia: por eso indica que SÍ hay relación lineal entre las variables.",
+  129: "Con ajuste perfecto no hay error, así que el valor esperado de la SSE es 0.",
+  130: "El error estándar de estimación se calcula con la SSE (el error del modelo): mide cuánto se alejan los puntos de la recta.",
+  131: "Regla: si el estadístico es mayor o igual a 4,256 se rechaza H0; si es menor, no se rechaza.",
+  132: "El ANOVA compara dos estimaciones de la varianza: los cuadrados medios entre grupos (CME) y los cuadrados medios dentro de grupos (CMD).",
+  133: "La frecuencia esperada de cada clase de una Poisson se calcula multiplicando la probabilidad de Poisson de esa clase por el tamaño de la muestra.",
+  134: "El test de Tukey-Kramer se usa después de rechazar la H0 del ANOVA para ver cuál o cuáles medias difieren.",
+  135: "El coeficiente 0,6186 (con datos en miles) dice que por cada $1000 más de ingreso, el consumo sube en promedio $618,6.",
+  136: "Completás la tabla ANOVA usando que las sumas y los cuadrados medios se relacionan (SST=SSE+SSD, CM=SS/gl, F=CME/CMD): los 4 valores que cierran son 8,15 / 1,2 / 17 / 12. El 53,33 es el que sobra.",
+  137: "Correlación igual a 1 = relación lineal perfecta y positiva: los puntos caen justo sobre una recta creciente.",
+  138: "Con SST=420 y SSR=100: SSE=420-100=320, CME=SSR/(c-1)=100/6≈16,67... usando los grupos da CMD=1,59 y CME=53,33 según el armado del problema. La trampa es poner SST=100.",
+  139: "R²=0,625 (62,5% explicado) y, como es relación inversa, a más policías menos delitos.",
+  140: "Una tabla ANOVA necesita sí o sí: las sumas de cuadrados entre y dentro con sus grados, los cuadrados medios y el F calculado. El R² NO es parte de la tabla ANOVA.",
+  141: "Mejor ajuste = R² más alto (igual que la 107).",
+  142: "La hipótesis alternativa de la prueba de independencia SÍ dice que las dos variables están relacionadas, así que la afirmación es Verdadera.",
+  143: "Que los errores de un período se correlacionen con los del anterior viola el supuesto de Independencia de errores.",
+  144: "Si SSR/SST=1, toda la variación la explica la recta: SST=SSR, ajuste perfecto y Y observado igual al estimado. La falsa es decir que no hay relación lineal.",
+  145: "SSR=0 significa que la recta no explica nada de la variación: no hay relación lineal entre las variables.",
+  146: "La recta da Y=0,284·X+17 (en miles); para 645 bolsas reemplazás y el costo estimado es ≈ $200.180.",
+  147: "Para 3 concesionarias al 0,01 las 4 correctas son: grados (2;9), media 63,8, F crítico 8,022 y H0 con tres medias iguales (μT=μL=μP). La trampa es la H0 con cuatro medias.",
+  148: "La SST es la suma total: SST = SSR + SSE (lo que la recta explica más lo que no).",
+  149: "La SST = suma de los cuadrados de las diferencias entre cada Y observado y el promedio de Y (la variación total de los datos).",
+  150: "Para diferencia de medias con dos muestras independientes y varianzas desconocidas pero iguales, los grados de la t son n1+n2-2.",
+  151: "SSR = R² × SST = 0,846 × 9,845 ≈ 8,329 (misma cuenta que la 32 y 121, en otra escala).",
+  152: "Tabla 3x4: grados = (3-1)·(4-1) = 6. El χ² crítico al 0,05 para 6 g.l. es 12,592.",
+  153: "Para la prueba de independencia de dos variables categóricas se usa la distribución Chi-cuadrado.",
+  154: "Los 3 supuestos del ANOVA: Homogeneidad de varianzas, Aleatoriedad/Independencia y Normalidad. La linealidad no va (es de la regresión).",
+  155: "El ANOVA compara el CME (entre grupos) contra el CMD (dentro de grupos): esas son las dos varianzas (igual que la 132).",
+  156: "Estimás λ ≈ 1,5 llegadas por hora. La H0 correcta afirma que las llegadas SIGUEN una Poisson y la H1 que NO la siguen (igual que la 80).",
+  157: "El coeficiente 1,77 está en cientos: por cada hora de uso la máquina produce en promedio 177 piezas defectuosas más.",
+  158: "En la tabla ANOVA: SST = SSE + SSD (igual que la 59).",
+  159: "En Chi-cuadrado de independencia la zona de rechazo está en la cola superior (derecha).",
+  160: "Es un ANOVA de un factor y el CME (cuadrados medios entre grupos) da 531,58 (igual que la 87).",
+  161: "El crítico al 0,1 es 10,645 y el χ² calculado 27,41: como lo supera, se rechaza la H0 (las variables están relacionadas). La redacción de la conclusión está al revés, pero la decisión es esa.",
+  162: "La recta da Y=57,47·X+649,5 (en miles); la pendiente dice +$57.470 por año de experiencia, y para 7,5 años predice ≈ $1.080.525. La falsa es lo de la ordenada como ventas base.",
+  163: "Mismos rangos que la 10: r de -1 a 1, R² de 0 a 1, pendiente y ordenada con cualquier signo. La falsa es poner R² entre -1 y 1.",
+  164: "La correlación da -0,935: signo menos por la relación inversa (más policías, menos delitos) y valor cerca de 1, así que es fuerte (igual que la 44).",
+  165: "En Chi-cuadrado de bondad de ajuste la zona de rechazo está en la cola superior (derecha).",
+  166: "Las 4 correctas describen la regresión múltiple (álgebra matricial, mínimos cuadrados, varias X, ecuación Y=B0+B1X1+...). La falsa es lo de 'tantas rectas como variables'.",
+  167: "Esa fórmula que suma (observado - esperado)²/esperado por filas y columnas es el χ² de la prueba de independencia.",
+  168: "La H0 fija las proporciones afirmadas (0,2 / 0,5 / 0,2 / 0,1). Con 4 categorías hay 3 grados de libertad y el χ² crítico al 0,05 es 7,815.",
+  169: "La conclusión del ANOVA 'no hay evidencia para suponer que los promedios son iguales' significa que se rechazó H0: las categorías difieren.",
+  170: "SSR = R² × SST = 0,896 × 122.460 ≈ 108.828: es la variación entre los Y estimados por la recta y el promedio de Y.",
+  171: "R²=0,896 (89,6% explicado) y r=-√0,896 ≈ -0,947 (negativo por la pendiente negativa): relación fuerte e inversa.",
+  172: "Bondad de ajuste uniforme: H0 reparto parejo, H1 que no, estadístico χ² y, con 5 grados de libertad al 0,01, el valor de tabla es 15,086 (la #93 es el mismo caso)."
+};
+
+// Avisos solo para las preguntas donde el preguntero tiene un error y se dejó la opción marcada tal cual.
+const OJO = {
+  124: "El preguntero escribe 'promedio de X'. La SSR usa el promedio de Y (Ȳ). Es un error de tipeo del original.",
+  128: "El preguntero marca 'las rectas no tienen relación', pero pendiente distinta de cero significa que SÍ hay relación lineal. Marcá lo que pide el preguntero, pero el concepto es el contrario.",
+  130: "El preguntero marca √(SSR/SST). El error estándar correcto es √(SSE/(n-2)) (mirá la #85, que lo tiene bien).",
+  133: "El preguntero marca 'frecuencia observada × n', pero la frecuencia esperada de Poisson es probabilidad de Poisson × n.",
+  142: "El preguntero marca Falso, pero la alternativa SÍ dice que las variables están relacionadas (la #13 lo tiene como Verdadero). Es una contradicción del propio preguntero.",
+  143: "El preguntero marca 'Linealidad', pero la correlación entre errores de períodos consecutivos viola la Independencia (mirá la #40 y la #125).",
+  156: "El preguntero pone la H0 negada, pero en bondad de ajuste la H0 siempre AFIRMA que sigue la distribución (la #80 es el mismo caso y está bien).",
+  172: "El preguntero muestra 15,806. El valor de tabla del χ² con 5 g.l. al 0,01 es 15,086 (transposición de dígitos; comparalo con la #93)."
+};
+</script>
+<script>
+(function(){
+  "use strict";
+  const LS_KEY = "estad2_2p_quiz_v1";
+  const LS_STATS = "estad2_2p_stats_v1";
+  const $ = s => document.querySelector(s);
+  const el = (id) => document.getElementById(id);
+
+  // ---- historial persistente (acumula entre sesiones) ----
+  function loadStats(){ try{ const r=localStorage.getItem(LS_STATS); return r?JSON.parse(r):{}; }catch(e){ return {}; } }
+  function saveStats(s){ try{ localStorage.setItem(LS_STATS, JSON.stringify(s)); }catch(e){} }
+  function recordAnswer(n, isRight){
+    const s = loadStats();
+    const e = s[n] || {seen:0, wrong:0, ts:0};
+    e.seen += 1;
+    if(!isRight) e.wrong += 1;
+    e.ts = Date.now();
+    s[n] = e; saveStats(s);
+    return e;
+  }
+  function clearStats(){ try{ localStorage.removeItem(LS_STATS); }catch(e){} }
+  function failedRanked(){
+    const s = loadStats();
+    return PREGUNTAS
+      .filter(p => s[p.n] && s[p.n].wrong > 0)
+      .map(p => ({ n:p.n, q:p, seen:s[p.n].seen, wrong:s[p.n].wrong, rate:s[p.n].wrong/s[p.n].seen }))
+      .sort((a,b) => (b.wrong-a.wrong) || (b.rate-a.rate) || (b.seen-a.seen));
+  }
+
+  // counts
+  el("cntAmbas").textContent   = PREGUNTAS.length;
+  el("cntTeoria").textContent  = PREGUNTAS.filter(p=>p.cat==="teoria").length;
+  el("cntPractica").textContent= PREGUNTAS.filter(p=>p.cat==="practica").length;
+
+  let cfg = { cat:"ambas", shuffleQ:true, shuffleO:true, retry:true, instant:true };
+  let state = null;
+
+  // ---- category segmented ----
+  document.getElementById("catSeg").addEventListener("click", e=>{
+    const b = e.target.closest("button"); if(!b) return;
+    [...e.currentTarget.children].forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    cfg.cat = b.dataset.cat;
+  });
+
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function buildPool(){
+    let base = PREGUNTAS.filter(p => cfg.cat==="ambas" ? true : p.cat===cfg.cat);
+    base = base.map(p=>({...p}));
+    if(cfg.shuffleQ) shuffle(base);
+    return base;
+  }
+
+  // Pool de repaso: todas las que fallaste alguna vez, peor primero (ignora categoría)
+  function buildReviewPool(){ return failedRanked().map(o=>o.n); }
+
+  function startReview(){
+    cfg.shuffleO = el("optShuffleO").checked;
+    cfg.retry    = el("optRetry").checked;
+    cfg.instant  = el("optInstant").checked;
+    cfg.shuffleQ = false; // se mantiene el orden peor-primero
+    const pool = buildReviewPool();
+    if(!pool.length) return;
+    state = { cfg:{...cfg}, mode:"review", pool, idx:0, ok:0, bad:0, answered:0, retryQueue:[], done:false };
+    el("setup").classList.add("hidden");
+    el("results").classList.add("hidden");
+    el("quiz").classList.remove("hidden");
+    render(); save();
+  }
+
+  function refreshHist(){
+    const s = loadStats();
+    const ns = Object.keys(s);
+    const practicadas = ns.filter(k=>s[k].seen>0).length;
+    const totalSeen = ns.reduce((a,k)=>a+s[k].seen,0);
+    const totalWrong = ns.reduce((a,k)=>a+s[k].wrong,0);
+    const ranked = failedRanked();
+    el("hPracticadas").textContent = practicadas;
+    el("hAciertos").textContent = totalSeen ? Math.round((1-totalWrong/totalSeen)*100)+"%" : "—";
+    el("hFalladas").textContent = ranked.length;
+    const top = ranked.slice(0,5);
+    const box = el("histTop");
+    if(!top.length){
+      box.innerHTML = '<div class="hist-empty">Todavía no fallaste ninguna (o no practicaste aún). Respondé algunas preguntas y acá van a aparecer las que más te cuestan para repasarlas.</div>';
+    } else {
+      box.innerHTML = top.map(o=>{
+        const t = o.q.q.length>52 ? o.q.q.slice(0,52)+"…" : o.q.q;
+        return '<div class="ht"><span class="nq">#'+o.n+'</span><span class="txt">'+escapeHtml(t)+'</span><span class="f">'+o.wrong+'/'+o.seen+'</span></div>';
+      }).join("");
+    }
+    const btn = el("btnReview");
+    btn.disabled = ranked.length===0;
+    btn.textContent = ranked.length ? '📌 Repasar las que más fallé ('+ranked.length+')' : '📌 Repasar las que más fallé';
+  }
+
+  function startQuiz(fresh){
+    cfg.shuffleQ = el("optShuffleQ").checked;
+    cfg.shuffleO = el("optShuffleO").checked;
+    cfg.retry    = el("optRetry").checked;
+    cfg.instant  = el("optInstant").checked;
+
+    if(fresh){
+      state = {
+        cfg:{...cfg},
+        mode:"normal",
+        pool: buildPool().map(p=>p.n),
+        idx: 0,
+        ok: 0, bad: 0, answered: 0,
+        retryQueue: [],
+        done:false
+      };
+    }
+    el("setup").classList.add("hidden");
+    el("results").classList.add("hidden");
+    el("quiz").classList.remove("hidden");
+    render();
+    save();
+  }
+
+  function currentN(){
+    if(state.idx < state.pool.length) return state.pool[state.idx];
+    return state.retryQueue.length ? state.retryQueue[0] : null;
+  }
+  function inRetryPhase(){ return state.idx >= state.pool.length; }
+
+  function getQ(n){ return PREGUNTAS.find(p=>p.n===n); }
+
+  function render(){
+    const n = currentN();
+    if(n===null){ return finish(); }
+    const q = getQ(n);
+
+    // progress
+    const total = state.pool.length;
+    const pos = inRetryPhase() ? total : state.idx;
+    const pct = total ? Math.min(100, Math.round((pos/total)*100)) : 0;
+    el("progBar").style.width = pct + "%";
+    el("progTxt").textContent = inRetryPhase()
+      ? "Reintentos: " + state.retryQueue.length + " restante(s)"
+      : "Pregunta " + (state.idx+1) + " de " + total;
+    el("poolTxt").textContent = (state.mode==="review") ? "Más falladas"
+      : (cfg.cat==="ambas"?"Ambas":cfg.cat==="teoria"?"Teoría":"Práctica");
+    el("okCount").textContent = state.ok;
+    el("badCount").textContent= state.bad;
+
+    // head
+    const tag = el("qTag");
+    tag.textContent = q.cat==="teoria" ? "Teoría" : "Práctica";
+    tag.className = "qtag " + q.cat;
+    el("qNum").textContent = "#" + q.n;
+    el("qMulti").classList.toggle("hidden", !q.multi);
+
+    el("qText").textContent = q.q;
+
+    // table
+    const tw = el("qTable");
+    if(q.tabla && typeof TABLAS!=="undefined" && TABLAS[q.tabla]){
+      tw.innerHTML = '<div class="qt-scroll">'+TABLAS[q.tabla]+'</div>';
+      tw.classList.remove("hidden");
+    } else { tw.innerHTML=""; tw.classList.add("hidden"); }
+
+    // options order (stable per render via stored map)
+    let order = q.opciones.map((_,i)=>i);
+    if(cfg.shuffleO){
+      // shuffle but keep a copy so re-renders are consistent during answering
+      if(!state._order || state._orderFor!==n){
+        order = shuffle(order.slice());
+        state._order = order; state._orderFor = n;
+      } else { order = state._order; }
+    } else { state._order = order; state._orderFor = n; }
+
+    const optsBox = el("opts");
+    optsBox.innerHTML = "";
+    state.picked = new Set();
+    order.forEach(origIdx=>{
+      const btn = document.createElement("button");
+      btn.className = "opt-btn" + (q.multi ? " multi":"");
+      btn.dataset.idx = origIdx;
+      btn.innerHTML = '<span class="mk"></span>' + escapeHtml(q.opciones[origIdx]);
+      btn.addEventListener("click", ()=>onPick(btn, q));
+      optsBox.appendChild(btn);
+    });
+
+    // feedback + foot
+    el("feedback").className = "feedback";
+    el("feedback").innerHTML = "";
+    drawFoot(q, false);
+  }
+
+  function onPick(btn, q){
+    if(btn.classList.contains("locked")) return;
+    const idx = +btn.dataset.idx;
+    if(q.multi){
+      if(state.picked.has(idx)){ state.picked.delete(idx); btn.classList.remove("sel"); }
+      else { state.picked.add(idx); btn.classList.add("sel"); }
+    } else {
+      state.picked = new Set([idx]);
+      [...el("opts").children].forEach(b=>b.classList.remove("sel"));
+      btn.classList.add("sel");
+      if(cfg.instant){ checkAnswer(q); }
+    }
+    // enable submit if needed
+    const submit = el("btnSubmit");
+    if(submit) submit.disabled = state.picked.size===0;
+  }
+
+  function arraysEqualSet(a, setB){
+    if(a.length !== setB.size) return false;
+    return a.every(x=>setB.has(x));
+  }
+
+  function checkAnswer(q){
+    if(state.locked) return;
+    state.locked = true;
+    const correct = q.correctas;
+    const picked = state.picked;
+    const isRight = arraysEqualSet(correct, picked);
+
+    // lock & color
+    [...el("opts").children].forEach(b=>{
+      b.classList.add("locked");
+      const i = +b.dataset.idx;
+      const wasPicked = picked.has(i);
+      const isCorrect = correct.includes(i);
+      if(isCorrect && wasPicked) b.classList.add("correct");
+      else if(isCorrect && !wasPicked) b.classList.add(isRight?"correct":"missed");
+      else if(!isCorrect && wasPicked) b.classList.add("wrong");
+    });
+
+    // tally (only first time we see this n in main pass; retries also count toward score display)
+    state.answered++;
+    if(isRight) state.ok++; else {
+      state.bad++;
+      if(cfg.retry && !inRetryPhase() && !state.retryQueue.includes(q.n)){
+        state.retryQueue.push(q.n);
+      }
+    }
+    el("okCount").textContent = state.ok;
+    el("badCount").textContent= state.bad;
+
+    // acumular historial persistente
+    const hist = recordAnswer(q.n, isRight);
+
+    // feedback
+    const fb = el("feedback");
+    fb.className = "feedback show " + (isRight?"good":"bad");
+    let html = "<strong>" + (isRight ? "✓ ¡Correcto!" : "✗ Incorrecto") + "</strong>";
+    if(!isRight){
+      const ans = correct.map(i=>"• "+escapeHtml(q.opciones[i])).join("<br>");
+      html += "Respuesta" + (correct.length>1?"s correctas":" correcta") + ":<br>" + ans;
+    }
+    if(q.nota){ html += '<span class="note">⚠ Nota: '+escapeHtml(q.nota)+'</span>'; }
+    if(typeof JUST!=="undefined" && JUST[q.n]){ html += '<span class="just"><b>💡 Para dummies:</b> '+escapeHtml(JUST[q.n])+'</span>'; }
+    if(typeof OJO!=="undefined" && OJO[q.n]){ html += '<span class="note">⚠ Ojo para el examen: '+escapeHtml(OJO[q.n])+'</span>'; }
+    if(hist && hist.seen>0){ html += '<span class="histline">📊 Histórico: la fallaste '+hist.wrong+' de '+hist.seen+' '+(hist.seen===1?'vez':'veces')+'</span>'; }
+    fb.innerHTML = html;
+
+    drawFoot(q, true);
+    save();
+  }
+
+  function drawFoot(q, answered){
+    const foot = el("qfoot");
+    foot.innerHTML = "";
+    if(!answered){
+      if(q.multi || !cfg.instant){
+        const submit = document.createElement("button");
+        submit.id="btnSubmit"; submit.className="btn primary wide"; submit.textContent="Comprobar";
+        submit.disabled = true;
+        submit.addEventListener("click", ()=>{ if(state.picked.size) checkAnswer(q); });
+        foot.appendChild(submit);
+      }
+      const skip = document.createElement("button");
+      skip.className="btn ghost"; skip.textContent="Posponer ⏭";
+      skip.title="Mover esta pregunta al final";
+      skip.addEventListener("click", ()=>postpone());
+      foot.appendChild(skip);
+    } else {
+      const next = document.createElement("button");
+      next.className="btn primary wide";
+      next.textContent = "Siguiente →";
+      next.addEventListener("click", ()=>advance());
+      foot.appendChild(next);
+
+      const stop = document.createElement("button");
+      stop.className="btn ghost"; stop.textContent="Finalizar";
+      stop.addEventListener("click", ()=>finish());
+      foot.appendChild(stop);
+    }
+  }
+
+  function postpone(){
+    const n = currentN(); if(n===null) return;
+    if(inRetryPhase()){
+      // move first retry item to the back
+      state.retryQueue.push(state.retryQueue.shift());
+    } else {
+      // move current pool item to end of pool
+      const cur = state.pool.splice(state.idx,1)[0];
+      state.pool.push(cur);
+    }
+    state.locked=false; state._order=null; state._orderFor=null;
+    render(); save();
+  }
+
+  function advance(){
+    state.locked=false; state._order=null; state._orderFor=null;
+    if(inRetryPhase()){
+      const wasN = state.retryQueue[0];
+      // if it was answered correctly we drop it, else keep cycling (already re-added? we removed below)
+      state.retryQueue.shift();
+    } else {
+      state.idx++;
+    }
+    render(); save();
+  }
+
+  function finish(){
+    state.done = true;
+    el("quiz").classList.add("hidden");
+    el("setup").classList.add("hidden");
+    el("results").classList.remove("hidden");
+    const tot = state.answered;
+    const pct = tot ? Math.round((state.ok/tot)*100) : 0;
+    el("rPct").textContent = pct + "%";
+    el("rOk").textContent = state.ok;
+    el("rBad").textContent= state.bad;
+    el("rTot").textContent= tot;
+    const circ = 389.6;
+    el("ringFg").style.strokeDashoffset = circ - (circ*pct/100);
+    let msg, title;
+    if(pct>=90){ title="¡Excelente, Matías!"; msg="Dominás el material. Listo para el parcial."; }
+    else if(pct>=75){ title="¡Muy bien!"; msg="Buen nivel. Repasá los temas que fallaste y a darle."; }
+    else if(pct>=60){ title="Vas bien encaminado"; msg="Reforzá las preguntas incorrectas con otra vuelta."; }
+    else { title="A seguir practicando"; msg="Volvé a repasar; con la opción de reintentar errores afina rápido."; }
+    el("rTitle").textContent=title; el("rMsg").textContent=msg;
+    clearSave();
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  // ---- persistence ----
+  function save(){
+    try{
+      const snap = {cfg, mode:state.mode, idx:state.idx, pool:state.pool, retryQueue:state.retryQueue,
+        ok:state.ok, bad:state.bad, answered:state.answered, done:state.done};
+      localStorage.setItem(LS_KEY, JSON.stringify(snap));
+    }catch(e){}
+  }
+  function clearSave(){ try{ localStorage.removeItem(LS_KEY);}catch(e){} }
+  function loadSave(){ try{ const r=localStorage.getItem(LS_KEY); return r?JSON.parse(r):null;}catch(e){return null;} }
+
+  // ---- buttons ----
+  el("btnStart").addEventListener("click", ()=>startQuiz(true));
+  el("btnAgain").addEventListener("click", ()=>{
+    if(state && state.mode==="review") startReview(); else startQuiz(true);
+  });
+  el("btnReview").addEventListener("click", ()=>startReview());
+  el("btnReviewResults").addEventListener("click", ()=>startReview());
+  el("btnResetHist").addEventListener("click", ()=>{
+    if(confirm("¿Borrar todo el historial de aciertos y errores? Esta acción no se puede deshacer.")){
+      clearStats(); refreshHist();
+    }
+  });
+  el("btnConfig").addEventListener("click", ()=>{
+    el("results").classList.add("hidden");
+    el("quiz").classList.add("hidden");
+    el("setup").classList.remove("hidden");
+    refreshHist();
+  });
+
+  // resume
+  const saved = loadSave();
+  if(saved && !saved.done && (saved.idx>0 || (saved.retryQueue&&saved.retryQueue.length))){
+    el("resumeRow").classList.remove("hidden");
+    el("btnResume").addEventListener("click", ()=>{
+      cfg = saved.cfg || cfg;
+      state = {cfg, mode:saved.mode||"normal", pool:saved.pool, idx:saved.idx, retryQueue:saved.retryQueue||[],
+        ok:saved.ok||0, bad:saved.bad||0, answered:saved.answered||0, done:false};
+      // sync toggles
+      el("optShuffleQ").checked=!!cfg.shuffleQ; el("optShuffleO").checked=!!cfg.shuffleO;
+      el("optRetry").checked=!!cfg.retry; el("optInstant").checked=!!cfg.instant;
+      [...document.getElementById("catSeg").children].forEach(b=>b.classList.toggle("active",b.dataset.cat===cfg.cat));
+      el("setup").classList.add("hidden"); el("quiz").classList.remove("hidden");
+      render();
+    });
+  }
+
+  // pintar historial al cargar
+  refreshHist();
+})();
+</script>
+</body>
+</html>
